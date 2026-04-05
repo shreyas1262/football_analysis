@@ -128,6 +128,23 @@ CREATE TABLE raw.standings (
 );
 
 -- -----------------------------------------------------------------------------
+-- raw.players
+-- -----------------------------------------------------------------------------
+CREATE TABLE raw.players (
+    id              INTEGER PRIMARY KEY,
+    name            TEXT,
+    first_name      TEXT,
+    last_name       TEXT,
+    date_of_birth   DATE,
+    nationality     TEXT,
+    position        TEXT,
+    shirt_number    INTEGER,
+    team_id         INTEGER,
+    raw_payload     JSONB,
+    ingested_at     TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- -----------------------------------------------------------------------------
 -- raw.ingestion_log
 -- -----------------------------------------------------------------------------
 CREATE TABLE raw.ingestion_log (
@@ -141,3 +158,7 @@ CREATE TABLE raw.ingestion_log (
     started_at        TIMESTAMP WITH TIME ZONE,
     finished_at       TIMESTAMP WITH TIME ZONE
 );
+
+-- Grant football user full access to all tables created above by the postgres superuser
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA raw TO football;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA raw TO football;
