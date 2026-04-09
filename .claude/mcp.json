@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "football-analytics": {
+      "command": "/bin/bash",
+      "args": [
+        "-c",
+        "source /Users/shreyastelkar/Documents/Git/football_analysis/football_analysis/.venv/bin/activate && python /Users/shreyastelkar/Documents/Git/football_analysis/football_analysis/mcp/football_mcp_server.py"
+      ],
+      "env": {
+        "DB_HOST": "localhost",
+        "DB_PORT": "5432",
+        "DB_NAME": "football_db",
+        "DB_USER": "football",
+        "DB_PASSWORD": "football"
+      }
+    }
+  }
+}
