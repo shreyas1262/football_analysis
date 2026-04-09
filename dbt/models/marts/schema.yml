@@ -1,0 +1,19 @@
+version: 2
+
+models:
+  - name: mart_league_table
+    columns:
+      - name: team_name
+        tests: [not_null]
+      - name: points
+        tests: [not_null]
+  - name: mart_match_results
+    columns:
+      - name: match_id
+        tests: [unique, not_null]
+  - name: mart_bottler_index
+    columns:
+      - name: team_name
+        tests: [not_null]
+      - name: drop_rate_pct
+        tests: [not_null]

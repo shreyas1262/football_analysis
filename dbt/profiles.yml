@@ -1,0 +1,12 @@
+football_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: postgres
+      port: 5432
+      user: football
+      password: football
+      dbname: football_db
+      schema: staging
+      threads: 4

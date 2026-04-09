@@ -3,6 +3,7 @@ import logging
 from datetime import datetime, timedelta
 
 from airflow.decorators import dag, task
+from airflow.operators.bash import BashOperator
 from airflow.hooks.postgres_hook import PostgresHook
 
 from football_api_client import FootballAPIClient
@@ -441,9 +442,15 @@ def football_data_ingestion():
     matches = ingest_matches()
     standings = ingest_standings()
 
+    run_dbt = BashOperator(
+        task_id='run_dbt_models',
+        bash_command='docker compose exec -T dbt dbt run',
+    )
+
     competitions >> teams >> players
     competitions >> matches
     competitions >> standings
+    [players, matches, standings] >> run_dbt
 
 
 football_data_ingestion()

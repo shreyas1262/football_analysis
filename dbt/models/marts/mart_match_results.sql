@@ -1,0 +1,25 @@
+SELECT
+    match_id,
+    match_date,
+    matchday,
+    season_id,
+    competition_id,
+    competition_name,
+    competition_code,
+    home_team_id,
+    home_team_name,
+    away_team_id,
+    away_team_name,
+    home_goals,
+    away_goals,
+    home_goals_ht,
+    away_goals_ht,
+    total_goals,
+    goal_diff,
+    total_goals_ht,
+    result,
+    ht_leader,
+    is_high_scoring,
+    is_ht_lead_dropped
+FROM {{ ref('int_match_results') }}
+ORDER BY match_date DESC

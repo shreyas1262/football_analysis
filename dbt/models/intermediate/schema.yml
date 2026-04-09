@@ -1,0 +1,11 @@
+version: 2
+
+models:
+  - name: int_match_results
+    columns:
+      - name: match_id
+        tests: [unique, not_null]
+  - name: int_team_form
+    columns:
+      - name: team_id
+        tests: [not_null]

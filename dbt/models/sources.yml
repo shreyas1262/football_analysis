@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: raw
+    database: football_db
+    schema: raw
+    tables:
+      - name: competitions
+      - name: teams
+      - name: matches
+      - name: standings

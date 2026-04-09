@@ -70,15 +70,20 @@ services:
     restart: unless-stopped
 
   dbt:
-    image: ghcr.io/dbt-labs/dbt-postgres:1.8.latest
-    platform: linux/amd64
-    env_file: .env
+    build:
+      context: ./dbt
+      dockerfile: Dockerfile
     volumes:
       - ./dbt:/usr/app/dbt
-    command: tail -f /dev/null
+    environment:
+      DBT_PROFILES_DIR: /usr/app/dbt
+    working_dir: /usr/app/dbt
+    ports:
+      - "8081:8081"
     depends_on:
       postgres:
         condition: service_healthy
+    command: tail -f /dev/null
 
 volumes:
   postgres_data:

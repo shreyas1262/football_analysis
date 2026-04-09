@@ -1,0 +1,31 @@
+version: 2
+
+models:
+  - name: stg_competitions
+    columns:
+      - name: competition_id
+        tests: [unique, not_null]
+      - name: competition_code
+        tests: [not_null]
+
+  - name: stg_teams
+    columns:
+      - name: team_id
+        tests: [unique, not_null]
+
+  - name: stg_matches
+    columns:
+      - name: match_id
+        tests: [unique, not_null]
+      - name: status
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['FINISHED']
+
+  - name: stg_standings
+    columns:
+      - name: team_id
+        tests: [not_null]
+      - name: points
+        tests: [not_null]
