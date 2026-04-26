@@ -7,6 +7,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import anthropic
 from dotenv import load_dotenv
 
+from nl_to_sql import nl_to_sql_pipeline
 from rag_retrieval import build_rag_context, retrieve_relevant_chunks
 
 load_dotenv()
@@ -179,6 +180,26 @@ TOOLS = [
             "required": ["query"],
         },
     },
+    {
+        "name": "nl_to_sql",
+        "description": (
+            "Generates and executes a custom SQL query for any football question "
+            "not covered by the other tools. Use this as a fallback when the specific "
+            "predefined tools cannot answer the question. Examples: cross-table analysis, "
+            "custom aggregations, questions about specific dates or matchdays, "
+            "anything requiring a JOIN between tables."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "question": {
+                    "type": "string",
+                    "description": "The natural language question to convert to SQL",
+                },
+            },
+            "required": ["question"],
+        },
+    },
 ]
 
 # ---------------------------------------------------------------------------
@@ -321,6 +342,10 @@ def call_tool(name: str, inputs: dict) -> list[dict] | str:
             limit=inputs.get("limit", 5),
         )
         return chunks
+
+    elif name == "nl_to_sql":
+        result = nl_to_sql_pipeline(inputs["question"])
+        return result
 
     return []
 
