@@ -22,7 +22,7 @@ x-airflow-common: &airflow-common
 
 services:
   postgres:
-    image: postgres:15
+    image: pgvector/pgvector:pg15
     env_file: .env
     ports:
       - "5432:5432"

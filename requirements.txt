@@ -5,3 +5,4 @@ requests>=2.31.0
 python-dotenv>=1.0.0
 sqlparse>=0.5.0
 pgvector>=0.3.0
+voyageai>=0.3.0

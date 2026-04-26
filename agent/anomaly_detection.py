@@ -1,26 +1,19 @@
-import json
 import os
+import sys
 import time
 from decimal import Decimal
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import anthropic
 import psycopg2
 import psycopg2.extras
 from dotenv import load_dotenv
 
+from config import DB_CONFIG
+
 load_dotenv()
-
-# ---------------------------------------------------------------------------
-# Database
-# ---------------------------------------------------------------------------
-
-DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "localhost"),
-    "port": int(os.getenv("DB_PORT", "5432")),
-    "dbname": os.getenv("DB_NAME", "football_db"),
-    "user": os.getenv("DB_USER", "football"),
-    "password": os.getenv("DB_PASSWORD", "football"),
-}
 
 # ---------------------------------------------------------------------------
 # Anthropic client
