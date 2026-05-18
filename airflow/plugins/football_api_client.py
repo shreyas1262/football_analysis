@@ -7,7 +7,7 @@ import requests
 logger = logging.getLogger("football_api_client")
 
 BASE_URL = "https://api.football-data.org/v4"
-RATE_LIMIT_SLEEP = 6  # free tier: 10 requests/minute
+RATE_LIMIT_SLEEP = 8  # free tier: 10 requests/minute — 8s gives headroom across task boundaries
 
 
 class FootballAPIClient:

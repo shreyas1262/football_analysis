@@ -7,8 +7,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import anthropic
 from dotenv import load_dotenv
 
-from nl_to_sql import nl_to_sql_pipeline
-from rag_retrieval import build_rag_context, retrieve_relevant_chunks
+from agent.nl_to_sql import nl_to_sql_pipeline
+from agent.rag_retrieval import build_rag_context, retrieve_relevant_chunks
 
 load_dotenv()
 

@@ -112,21 +112,7 @@ def ensure_unique_constraint(conn) -> None:
 # Narrative generation and storage
 # ---------------------------------------------------------------------------
 
-def generate_narratives_for_competition(
-    competition_code: str, limit: int = 20
-) -> list[int]:
-    sql = """
-        SELECT match_id, match_date, matchday, competition_code,
-               competition_name, home_team_name, away_team_name,
-               home_goals, away_goals, home_goals_ht, away_goals_ht,
-               total_goals, result, ht_leader, is_ht_lead_dropped,
-               is_high_scoring
-        FROM marts.mart_match_results
-        WHERE competition_code = %s
-        ORDER BY total_goals DESC, match_date DESC
-        LIMIT %s
-    """
-
+def generate_narratives_for_all(matches: list[dict]) -> list[int]:
     upsert_sql = """
         INSERT INTO marts.match_reports
             (match_id, competition_code, home_team, away_team,
@@ -138,38 +124,40 @@ def generate_narratives_for_competition(
         RETURNING id
     """
 
+    report_ids = []
+    total = len(matches)
+
     with psycopg2.connect(**DB_CONFIG) as conn:
         ensure_unique_constraint(conn)
 
-        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            cur.execute(sql, (competition_code, limit))
-            rows = cur.fetchall()
-
-        matches = [
-            {k: float(v) if isinstance(v, Decimal) else v for k, v in row.items()}
-            for row in rows
-        ]
-
-        print(f"\n{'='*70}")
-        print(f"  GENERATING NARRATIVES — {competition_code} ({len(matches)} matches)")
-        print(f"{'='*70}")
-
-        report_ids = []
-
-        for i, match in enumerate(matches, 1):
+        for count, match in enumerate(matches, 1):
             header = (
                 f"{match['home_team_name']} {match['home_goals']}-"
                 f"{match['away_goals']} {match['away_team_name']}"
             )
-            print(f"  [{i:02d}/{len(matches)}] MD{match['matchday']} | {header}", end=" ... ", flush=True)
-
-            response = client.messages.create(
-                model="claude-sonnet-4-6",
-                max_tokens=700,
-                temperature=0.8,
-                system=SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": build_user_message(match)}],
+            print(
+                f"  [{count:04d}/{total}] {match['competition_code']} "
+                f"MD{match['matchday']} | {header}",
+                end=" ... ", flush=True,
             )
+
+            for attempt in range(5):
+                try:
+                    response = client.messages.create(
+                        model="claude-haiku-4-5-20251001",
+                        max_tokens=700,
+                        temperature=0.8,
+                        system=SYSTEM_PROMPT,
+                        messages=[{"role": "user", "content": build_user_message(match)}],
+                    )
+                    break
+                except anthropic.APIStatusError as exc:
+                    if exc.status_code == 529 and attempt < 4:
+                        wait = 30 * (2 ** attempt)
+                        print(f"\n  [overloaded] waiting {wait}s before retry {attempt + 1}/4...", flush=True)
+                        time.sleep(wait)
+                    else:
+                        raise
             narrative = response.content[0].text.strip()
 
             with conn.cursor() as cur:
@@ -188,7 +176,10 @@ def generate_narratives_for_competition(
             report_ids.append(report_id)
             print(f"stored (id={report_id})")
 
-            if i < len(matches):
+            if count % 50 == 0:
+                print(f"\n  Progress: {count}/{total} narratives generated\n")
+
+            if count < total:
                 time.sleep(0.5)
 
     return report_ids
@@ -285,10 +276,20 @@ def embed_and_store_reports(report_ids: list[int]) -> int:
             )
 
             for chunk_index, chunk in enumerate(chunks):
-                response = voyage_client.embed(
-                    [chunk],
-                    model="voyage-3",
-                )
+                for attempt in range(5):
+                    try:
+                        response = voyage_client.embed(
+                            [chunk],
+                            model="voyage-3",
+                        )
+                        break
+                    except Exception as exc:
+                        if attempt < 4:
+                            wait = 15 * (2 ** attempt)
+                            print(f"\n  [voyage error] {exc} — waiting {wait}s before retry {attempt + 1}/4...", flush=True)
+                            time.sleep(wait)
+                        else:
+                            raise
                 embedding = response.embeddings[0]
 
                 with conn.cursor() as cur:
@@ -317,20 +318,77 @@ def embed_and_store_reports(report_ids: list[int]) -> int:
 # Main
 # ---------------------------------------------------------------------------
 
+COMPETITIONS = ["PL", "PD", "BL1", "SA", "FL1", "CL"]
+
+FETCH_SQL = """
+    SELECT m.match_id, m.match_date, m.matchday, m.competition_code,
+           m.competition_name, m.home_team_name, m.away_team_name,
+           m.home_goals, m.away_goals, m.home_goals_ht, m.away_goals_ht,
+           m.total_goals, m.result, m.ht_leader, m.is_ht_lead_dropped,
+           m.is_high_scoring
+    FROM marts.mart_match_results m
+    WHERE m.competition_code = ANY(%s)
+      AND m.match_id NOT IN (
+          SELECT match_id FROM marts.match_reports
+          WHERE match_id IS NOT NULL
+      )
+    ORDER BY m.match_date ASC
+"""
+
+
+UNEMBEDDED_SQL = """
+    SELECT mr.id
+    FROM marts.match_reports mr
+    WHERE NOT EXISTS (
+        SELECT 1 FROM marts.report_embeddings re
+        WHERE re.report_id = mr.id
+    )
+    ORDER BY mr.id ASC
+"""
+
+
 def main() -> None:
-    all_report_ids: list[int] = []
+    with psycopg2.connect(**DB_CONFIG) as conn:
+        ensure_unique_constraint(conn)
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(FETCH_SQL, (COMPETITIONS,))
+            rows = cur.fetchall()
 
-    pl_ids = generate_narratives_for_competition("PL", limit=20)
-    all_report_ids.extend(pl_ids)
+        with conn.cursor() as cur:
+            cur.execute(UNEMBEDDED_SQL)
+            unembedded_ids = [row[0] for row in cur.fetchall()]
 
-    bl1_ids = generate_narratives_for_competition("BL1", limit=20)
-    all_report_ids.extend(bl1_ids)
+    matches = [
+        {k: float(v) if isinstance(v, Decimal) else v for k, v in row.items()}
+        for row in rows
+    ]
 
-    total_chunks = embed_and_store_reports(all_report_ids)
+    total_matches = len(matches)
+    estimated_cost = total_matches * 500 * (0.80 + 4.00) / 1_000_000
+
+    print(f"\n{'='*70}")
+    print(f"  Matches without narratives : {total_matches}")
+    print(f"  Reports without embeddings : {len(unembedded_ids)}")
+    print(f"  Estimated cost             : ${estimated_cost:.2f} (Haiku, ~500 tokens/narrative)")
+    print(f"{'='*70}")
+    print("Continue? (y/n) ", end="", flush=True)
+
+    if input().strip().lower() != "y":
+        print("Aborted.")
+        return
+
+    if total_matches > 0:
+        print(f"\n{'='*70}")
+        print(f"  GENERATING NARRATIVES — ALL COMPETITIONS")
+        print(f"{'='*70}")
+        new_report_ids = generate_narratives_for_all(matches)
+        unembedded_ids = list(dict.fromkeys(unembedded_ids + new_report_ids))
+
+    total_chunks = embed_and_store_reports(unembedded_ids)
 
     print(f"\n{'='*70}")
     print(f"  COMPLETE")
-    print(f"  {len(all_report_ids)} narratives generated and stored")
+    print(f"  {len(unembedded_ids)} reports embedded")
     print(f"  {total_chunks} chunks embedded")
     print(f"{'='*70}\n")
 

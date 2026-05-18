@@ -1,29 +1,17 @@
 import asyncio
 import json
-import os
+import sys
 from decimal import Decimal
+from pathlib import Path
 
-import psycopg2
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import psycopg2.extras
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import TextContent, Tool
 
-# ---------------------------------------------------------------------------
-# Database connection
-# ---------------------------------------------------------------------------
-
-DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "localhost"),
-    "port": int(os.getenv("DB_PORT", "5432")),
-    "dbname": os.getenv("DB_NAME", "football_db"),
-    "user": os.getenv("DB_USER", "football"),
-    "password": os.getenv("DB_PASSWORD", "football"),
-}
-
-
-def get_conn():
-    return psycopg2.connect(**DB_CONFIG)
+from config.db import get_conn
 
 
 def query_to_json(sql: str, params: tuple) -> str:
