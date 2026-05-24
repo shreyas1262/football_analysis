@@ -20,6 +20,7 @@ RUN pip install --no-cache-dir \
 COPY mcp/ ./mcp/
 COPY config/ ./config/
 COPY agent/ ./agent/
+COPY mcp_entrypoint.py ./
 
 EXPOSE 8000
 
