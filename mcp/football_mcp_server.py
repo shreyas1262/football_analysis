@@ -82,4 +82,22 @@ def create_app() -> Starlette:
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
-    uvicorn.run(create_app(), host="0.0.0.0", port=port)
+    reload = os.getenv("MCP_RELOAD", "0") == "1"
+    if reload:
+        import subprocess
+        project_root = str(Path(__file__).parent.parent)
+        env = {**os.environ, "PYTHONPATH": project_root}
+        subprocess.run(
+            [
+                sys.executable, "-m", "uvicorn",
+                "mcp_entrypoint:create_app",
+                "--factory", "--reload",
+                "--reload-dir", project_root,
+                "--host", "0.0.0.0",
+                "--port", str(port),
+            ],
+            env=env,
+            cwd=project_root,
+        )
+    else:
+        uvicorn.run(create_app(), host="0.0.0.0", port=port)
