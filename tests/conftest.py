@@ -1,22 +1,17 @@
-import os
+import sys
+from pathlib import Path
 
-import psycopg2
 import pytest
-from dotenv import load_dotenv
 
-load_dotenv()
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from config.db import get_conn
 
 
 @pytest.fixture
 def db_conn():
-    """Live database connection for integration tests."""
-    conn = psycopg2.connect(
-        host=os.getenv("DB_HOST", "localhost"),
-        port=os.getenv("DB_PORT", 5432),
-        dbname=os.getenv("DB_NAME", "football_db"),
-        user=os.getenv("DB_USER", "football"),
-        password=os.getenv("DB_PASSWORD", "football"),
-    )
+    """Live Supabase connection for integration tests."""
+    conn = get_conn()
     yield conn
     conn.close()
 

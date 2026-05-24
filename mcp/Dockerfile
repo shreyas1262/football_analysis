@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir \
 
 COPY mcp/ ./mcp/
 COPY config/ ./config/
-COPY agent/rag_retrieval.py ./agent/
+COPY agent/ ./agent/
 
 EXPOSE 8000
 
