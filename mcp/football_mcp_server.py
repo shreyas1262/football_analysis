@@ -1,15 +1,19 @@
-import asyncio
 import json
+import os
 import sys
 from decimal import Decimal
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import uvicorn
 import psycopg2.extras
 from mcp.server import Server
-from mcp.server.stdio import stdio_server
+from mcp.server.sse import SseServerTransport
 from mcp.types import TextContent, Tool
+from starlette.applications import Starlette
+from starlette.responses import JSONResponse
+from starlette.routing import Route
 
 from config.db import get_conn
 
@@ -292,13 +296,43 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
 
 # ---------------------------------------------------------------------------
-# Entry point
+# HTTP/SSE transport
 # ---------------------------------------------------------------------------
 
-async def main():
-    async with stdio_server() as (read_stream, write_stream):
-        await server.run(read_stream, write_stream, server.create_initialization_options())
+def create_app() -> Starlette:
+    sse = SseServerTransport("/messages/")
+
+    async def handle_sse(request):
+        async with sse.connect_sse(
+            request.scope,
+            request.receive,
+            request._send,
+        ) as streams:
+            await server.run(
+                streams[0],
+                streams[1],
+                server.create_initialization_options(),
+            )
+
+    async def handle_messages(request):
+        await sse.handle_post_message(
+            request.scope,
+            request.receive,
+            request._send,
+        )
+
+    async def health_check(request):
+        return JSONResponse({"status": "ok", "server": "football-analytics"})
+
+    return Starlette(
+        routes=[
+            Route("/sse", endpoint=handle_sse),
+            Route("/messages/", endpoint=handle_messages, methods=["POST"]),
+            Route("/health", endpoint=health_check),
+        ]
+    )
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(create_app(), host="0.0.0.0", port=port)
