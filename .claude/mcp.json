@@ -1,7 +1,10 @@
 {
   "mcpServers": {
-    "football-analytics": {
-      "url": "https://mcp-touchline-dev.fly.dev/sse"
+    "football-analytics-dev": {
+      "url": "http://localhost:8000/sse"
+    },
+    "football-analytics-prod": {
+      "url": "https://mcp-touchline.fly.dev/sse"
     }
   }
 }
