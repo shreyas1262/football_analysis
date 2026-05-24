@@ -1,6 +1,15 @@
 name: Deploy MCP Server
 
 on:
+  pull_request:
+    branches: [main, developer]
+    paths:
+      - "mcp/**"
+      - "agent/**"
+      - "config/**"
+      - "mcp_entrypoint.py"
+      - "tests/**"
+      - ".github/workflows/deploy.yml"
   push:
     branches: [main, developer]
     paths:
