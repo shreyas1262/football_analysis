@@ -10,7 +10,7 @@ on:
       - "mcp_entrypoint.py"
 
 jobs:
-  deploy-staging:
+  deploy-developer:
     if: github.ref == 'refs/heads/developer'
     runs-on: ubuntu-latest
     steps:
