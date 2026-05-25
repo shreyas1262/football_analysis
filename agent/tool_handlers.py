@@ -108,11 +108,37 @@ class ToolHandlers:
             },
         },
         {
+            "name": "get_team_season_stats",
+            "description": (
+                "Returns complete season statistics for a team in a specific competition — "
+                "aggregate W/D/L/goals/points with home and away splits, plus every match "
+                "result for the season. Use this (not get_team_form) for full-season analysis, "
+                "season-on-season comparisons, or home/away breakdowns. " + _SEASON_NOTE
+            ),
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "team_name": {
+                        "type": "string",
+                        "description": "Team name or partial name (case-insensitive)",
+                    },
+                    "competition_code": {
+                        "type": "string",
+                        "description": "Competition code, e.g. PL, PD, BL1, SA, CL. Use any code present in the database.",
+                    },
+                    **_SEASON_PARAM,
+                },
+                "required": ["team_name", "competition_code"],
+            },
+        },
+        {
             "name": "get_team_form",
             "description": (
                 "Returns a team's last N matches with results, goals and rolling "
                 "form points. Use for questions about recent form, winning streaks, "
-                "losing runs, or current momentum. " + _SEASON_NOTE
+                "losing runs, or current momentum. "
+                "Optionally filter by competition_code to exclude cup/European games. "
+                + _SEASON_NOTE
             ),
             "input_schema": {
                 "type": "object",
@@ -125,6 +151,10 @@ class ToolHandlers:
                         "type": "integer",
                         "description": "Number of recent games to return (default 5)",
                         "default": 5,
+                    },
+                    "competition_code": {
+                        "type": "string",
+                        "description": "Optional competition filter, e.g. PL, PD, BL1, SA, CL. Omit to include all competitions.",
                     },
                     **_SEASON_PARAM,
                 },
@@ -310,28 +340,59 @@ class ToolHandlers:
         competition_code: str,
         season_start_year: int | None = None,
     ) -> list[dict]:
-        if season_start_year is not None:
-            sid_clause, sid_params = ToolHandlers._season_id_filter(competition_code, season_start_year)
-            return ToolHandlers._query_db(f"""
-                SELECT position, team_name, played_games, won, draw, lost,
-                       goals_for, goals_against, goal_difference, points,
-                       points_per_game, win_percentage, goals_per_game,
-                       conceded_per_game
-                FROM marts.mart_league_table
-                WHERE competition_code = %s
-                {sid_clause}
-                ORDER BY position
-            """, (competition_code, *sid_params))
-        return ToolHandlers._query_db("""
-            SELECT position, team_name, played_games, won, draw, lost,
+        if season_start_year is None:
+            season_start_year = ToolHandlers.current_season_year()
+        season_clause, season_params = ToolHandlers._season_date_filter(season_start_year)
+        # Compute live from match results so standings always reflect all played matches,
+        # not a stale dbt snapshot. Tiebreakers: points → GD → goals for.
+        return ToolHandlers._query_db(f"""
+            WITH all_team_games AS (
+                SELECT home_team_name AS team_name,
+                       home_goals      AS gf,
+                       away_goals      AS ga,
+                       CASE result WHEN 'home' THEN 3 WHEN 'draw' THEN 1 ELSE 0 END AS pts,
+                       (result = 'home')::int AS won,
+                       (result = 'draw')::int AS draw,
+                       (result = 'away')::int AS lost
+                FROM marts.mart_match_results
+                WHERE competition_code = %s {season_clause}
+                UNION ALL
+                SELECT away_team_name AS team_name,
+                       away_goals      AS gf,
+                       home_goals      AS ga,
+                       CASE result WHEN 'away' THEN 3 WHEN 'draw' THEN 1 ELSE 0 END AS pts,
+                       (result = 'away')::int AS won,
+                       (result = 'draw')::int AS draw,
+                       (result = 'home')::int AS lost
+                FROM marts.mart_match_results
+                WHERE competition_code = %s {season_clause}
+            ),
+            standings AS (
+                SELECT team_name,
+                       COUNT(*)                                        AS played_games,
+                       SUM(won)                                        AS won,
+                       SUM(draw)                                       AS draw,
+                       SUM(lost)                                       AS lost,
+                       SUM(gf)                                         AS goals_for,
+                       SUM(ga)                                         AS goals_against,
+                       SUM(gf) - SUM(ga)                               AS goal_difference,
+                       SUM(pts)                                        AS points,
+                       ROUND(SUM(pts)::numeric  / COUNT(*), 2)         AS points_per_game,
+                       ROUND(SUM(won)::numeric  / COUNT(*) * 100, 1)   AS win_percentage,
+                       ROUND(SUM(gf)::numeric   / COUNT(*), 2)         AS goals_per_game,
+                       ROUND(SUM(ga)::numeric   / COUNT(*), 2)         AS conceded_per_game
+                FROM all_team_games
+                GROUP BY team_name
+            )
+            SELECT RANK() OVER (
+                       ORDER BY points DESC, goal_difference DESC, goals_for DESC
+                   )::int                                              AS position,
+                   team_name, played_games, won, draw, lost,
                    goals_for, goals_against, goal_difference, points,
-                   points_per_game, win_percentage, goals_per_game,
-                   conceded_per_game
-            FROM marts.mart_league_table
-            WHERE competition_code = %s
-              AND season_id = (SELECT MAX(season_id) FROM marts.mart_league_table WHERE competition_code = %s)
+                   points_per_game, win_percentage, goals_per_game, conceded_per_game
+            FROM standings
             ORDER BY position
-        """, (competition_code, competition_code))
+        """, (competition_code, *season_params, competition_code, *season_params))
 
     @staticmethod
     def get_bottler_index(
@@ -361,13 +422,73 @@ class ToolHandlers:
         """, (competition_code, min_matches_leading, competition_code))
 
     @staticmethod
+    def get_team_season_stats(
+        team_name: str,
+        competition_code: str,
+        season_start_year: int | None = None,
+    ) -> dict:
+        team = f"%{team_name}%"
+        season_clause, season_params = ToolHandlers._season_date_filter(season_start_year)
+        rows = ToolHandlers._query_db(f"""
+            SELECT
+                match_date,
+                CASE WHEN home_team_name ILIKE %s THEN away_team_name ELSE home_team_name END AS opponent,
+                CASE WHEN home_team_name ILIKE %s THEN 'home' ELSE 'away'                 END AS venue,
+                home_goals, away_goals,
+                CASE WHEN home_team_name ILIKE %s THEN home_goals ELSE away_goals END AS goals_scored,
+                CASE WHEN home_team_name ILIKE %s THEN away_goals ELSE home_goals END AS goals_conceded,
+                result,
+                CASE
+                    WHEN home_team_name ILIKE %s AND result = 'home' THEN 'W'
+                    WHEN away_team_name ILIKE %s AND result = 'away' THEN 'W'
+                    WHEN result = 'draw'                             THEN 'D'
+                    ELSE 'L'
+                END AS team_result
+            FROM marts.mart_match_results
+            WHERE (home_team_name ILIKE %s OR away_team_name ILIKE %s)
+              AND competition_code = %s
+            {season_clause}
+            ORDER BY match_date ASC
+        """, (team, team, team, team, team, team, team, team, competition_code, *season_params))
+
+        def _agg(subset):
+            played = len(subset)
+            won    = sum(1 for r in subset if r["team_result"] == "W")
+            drawn  = sum(1 for r in subset if r["team_result"] == "D")
+            lost   = sum(1 for r in subset if r["team_result"] == "L")
+            gf     = sum(r["goals_scored"]    for r in subset)
+            ga     = sum(r["goals_conceded"]  for r in subset)
+            pts    = won * 3 + drawn
+            return {
+                "played": played, "won": won, "drawn": drawn, "lost": lost,
+                "goals_for": gf, "goals_against": ga, "goal_difference": gf - ga,
+                "points": pts,
+                "points_per_game":   round(pts / played, 2) if played else 0,
+                "win_percentage":    round(won / played * 100, 1) if played else 0,
+                "goals_per_game":    round(gf / played, 2) if played else 0,
+                "conceded_per_game": round(ga / played, 2) if played else 0,
+            }
+
+        home_rows  = [r for r in rows if r["venue"] == "home"]
+        away_rows  = [r for r in rows if r["venue"] == "away"]
+        return {
+            "aggregate": _agg(rows),
+            "home":      _agg(home_rows),
+            "away":      _agg(away_rows),
+            "matches":   rows,
+        }
+
+    @staticmethod
     def get_team_form(
         team_name: str,
         last_n_games: int = 5,
+        competition_code: str | None = None,
         season_start_year: int | None = None,
     ) -> list[dict]:
         team = f"%{team_name}%"
         season_clause, season_params = ToolHandlers._season_date_filter(season_start_year)
+        comp_clause  = "AND m.competition_code = %s" if competition_code else ""
+        comp_params  = [competition_code] if competition_code else []
         # form_points_last5 is computed inline via window function so we don't
         # depend on the intermediate.int_team_form dbt model being materialised.
         return ToolHandlers._query_db(f"""
@@ -388,6 +509,7 @@ class ToolHandlers:
                     END AS match_pts
                 FROM marts.mart_match_results m
                 WHERE (m.home_team_name ILIKE %s OR m.away_team_name ILIKE %s)
+                {comp_clause}
                 {season_clause}
             ),
             with_form AS (
@@ -399,7 +521,7 @@ class ToolHandlers:
             SELECT * FROM with_form
             ORDER BY match_date DESC
             LIMIT %s
-        """, (team, team, team, team, team, team, team, team, *season_params, last_n_games))
+        """, (team, team, team, team, team, team, team, team, *comp_params, *season_params, last_n_games))
 
     @staticmethod
     def get_head_to_head(

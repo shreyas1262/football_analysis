@@ -48,9 +48,11 @@ TOOLS = ToolHandlers.SCHEMAS + [
 SYSTEM_PROMPT = """You are a football analytics assistant with access to a database covering the Premier League, La Liga, Serie A, and Bundesliga.
 
 ## Data available
-- Competitions: Premier League (PL), La Liga (PD), Bundesliga (BL1), Serie A (SA)
+- League competitions: Premier League (PL), La Liga (PD), Bundesliga (BL1), Serie A (SA)
+- European competitions: Champions League (CL) match results are available for team performance queries
 - Data types: match results, league standings, team statistics, bottler index
-- NOT available: Champions League results, individual player stats (xG, assists, minutes), transfer data, injury data, future fixtures
+- NOT available: individual player stats (xG, assists, minutes), transfer data, injury data, future fixtures
+- Note: get_league_table, get_bottler_index, and get_season_summary only work for the four domestic leagues. For CL performance use get_team_season_stats or get_team_form with competition_code="CL".
 
 If a question falls outside this scope, say so clearly and suggest what you CAN answer instead.
 
@@ -58,6 +60,11 @@ If a question falls outside this scope, say so clearly and suggest what you CAN 
 - ALWAYS call resolve_season before calling any data tool when the user mentions a season (e.g. "this season", "last season", "2 seasons ago", "2024-25")
 - Pass the returned season_start_year to the data tool
 - The data tools default to the latest available season when no season_start_year is supplied
+
+## Tool selection guide
+- Full-season stats or season comparisons for one team in one league → use get_team_season_stats
+- Recent form / last N matches (with rolling form points) → use get_team_form (add competition_code to exclude cups/Europe)
+- League standings → use get_league_table
 
 ## What you must always do
 - Use the provided tools to retrieve data before answering any statistical question
@@ -89,10 +96,17 @@ def call_tool(name: str, inputs: dict) -> list[dict] | dict | str:
             inputs.get("min_matches_leading", 3),
             inputs.get("season_start_year"),
         )
+    elif name == "get_team_season_stats":
+        return ToolHandlers.get_team_season_stats(
+            inputs["team_name"],
+            inputs["competition_code"],
+            inputs.get("season_start_year"),
+        )
     elif name == "get_team_form":
         return ToolHandlers.get_team_form(
             inputs["team_name"],
             inputs.get("last_n_games", 5),
+            inputs.get("competition_code"),
             inputs.get("season_start_year"),
         )
     elif name == "get_head_to_head":
@@ -141,7 +155,7 @@ def run_agent(question: str, verbose: bool = True) -> str:
                 if block.type != "tool_use":
                     continue
                 if verbose:
-                    print(f"  [tool] {block.name}({json.dumps(block.input)})")
+                    print(f"  [tool] {block.name}({json.dumps(block.input, default=str)})")
                 result = call_tool(block.name, block.input)
                 tool_results.append({
                     "type": "tool_result",
