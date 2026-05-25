@@ -1,7 +1,8 @@
 {
   "mcpServers": {
     "football-analytics": {
-      "url": "https://mcp-touchline.fly.dev/sse"
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp-touchline.fly.dev/sse"]
     }
   }
 }
