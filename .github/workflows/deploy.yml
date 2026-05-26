@@ -4,20 +4,20 @@ on:
   pull_request:
     branches: [main, developer]
     paths:
+      - "src/**"
       - "mcp/**"
-      - "agent/**"
-      - "config/**"
       - "mcp_entrypoint.py"
       - "tests/**"
+      - "pyproject.toml"
       - ".github/workflows/deploy.yml"
   push:
     branches: [main, developer]
     paths:
+      - "src/**"
       - "mcp/**"
-      - "agent/**"
-      - "config/**"
       - "mcp_entrypoint.py"
       - "tests/**"
+      - "pyproject.toml"
       - ".github/workflows/deploy.yml"
   workflow_dispatch:
     inputs:
@@ -45,7 +45,7 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-      - run: pip install -r requirements.txt
+      - run: pip install -e ".[dev]"
       - run: pytest tests/ -v
 
   deploy-developer:

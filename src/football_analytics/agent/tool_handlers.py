@@ -1,6 +1,6 @@
 """
 Shared tool logic used by both the Anthropic agent (football_agent.py) and
-the MCP server (mcp/football_mcp_server.py).
+the MCP server (mcp/server.py).
 
 ToolHandlers.SCHEMAS  — tool definitions in Anthropic API format (input_schema).
                         The MCP server converts these to mcp.types.Tool objects.
@@ -15,7 +15,7 @@ from decimal import Decimal
 import psycopg2
 import psycopg2.extras
 
-from config.db import get_conn
+from football_analytics.config import get_conn
 
 
 _SEASON_PARAM = {
@@ -565,7 +565,7 @@ class ToolHandlers:
 
     @staticmethod
     def search_match_reports(query: str, limit: int = 5) -> list[dict]:
-        from agent.rag_retrieval import retrieve_relevant_chunks
+        from football_analytics.agent.rag_retrieval import retrieve_relevant_chunks
         return retrieve_relevant_chunks(query, limit=limit)
 
     @staticmethod

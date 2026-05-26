@@ -1,18 +1,13 @@
 """Tests for the MCP server tool definitions and season resolution logic."""
 import asyncio
-import sys
 from datetime import date
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-sys.path.insert(0, str(Path(__file__).parent.parent / "mcp"))
-
-from football_mcp_server import list_tools
-from agent.tool_handlers import ToolHandlers
-from agent.football_agent import call_tool
+from football_analytics.mcp.server import list_tools
+from football_analytics.agent.tool_handlers import ToolHandlers
+from football_analytics.agent.football_agent import call_tool
 
 
 # ---------------------------------------------------------------------------
@@ -60,27 +55,27 @@ def test_data_tools_have_season_start_year_param():
 
 class TestCurrentSeasonYear:
     def test_month_before_july_returns_previous_year(self):
-        with patch("agent.tool_handlers.date") as mock_date:
+        with patch("football_analytics.agent.tool_handlers.date") as mock_date:
             mock_date.today.return_value = date(2026, 5, 24)
             assert ToolHandlers.current_season_year() == 2025
 
     def test_july_returns_current_year(self):
-        with patch("agent.tool_handlers.date") as mock_date:
+        with patch("football_analytics.agent.tool_handlers.date") as mock_date:
             mock_date.today.return_value = date(2026, 7, 1)
             assert ToolHandlers.current_season_year() == 2026
 
     def test_august_returns_current_year(self):
-        with patch("agent.tool_handlers.date") as mock_date:
+        with patch("football_analytics.agent.tool_handlers.date") as mock_date:
             mock_date.today.return_value = date(2026, 8, 15)
             assert ToolHandlers.current_season_year() == 2026
 
     def test_december_returns_current_year(self):
-        with patch("agent.tool_handlers.date") as mock_date:
+        with patch("football_analytics.agent.tool_handlers.date") as mock_date:
             mock_date.today.return_value = date(2025, 12, 1)
             assert ToolHandlers.current_season_year() == 2025
 
     def test_january_returns_previous_year(self):
-        with patch("agent.tool_handlers.date") as mock_date:
+        with patch("football_analytics.agent.tool_handlers.date") as mock_date:
             mock_date.today.return_value = date(2025, 1, 15)
             assert ToolHandlers.current_season_year() == 2024
 
@@ -90,7 +85,7 @@ class TestParseSeasonReference:
 
     @pytest.fixture(autouse=True)
     def fix_current_season(self):
-        with patch("agent.tool_handlers.date") as mock_date:
+        with patch("football_analytics.agent.tool_handlers.date") as mock_date:
             mock_date.today.return_value = date(2026, 5, 24)
             yield
 

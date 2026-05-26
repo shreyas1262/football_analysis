@@ -1,11 +1,7 @@
 import os
 import re
-import sys
 import time
 from decimal import Decimal
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import anthropic
 import psycopg2
@@ -13,13 +9,9 @@ import psycopg2.extras
 import voyageai
 from dotenv import load_dotenv
 
-from config import DB_CONFIG
+from football_analytics.config import DB_CONFIG
 
 load_dotenv()
-
-# ---------------------------------------------------------------------------
-# Anthropic client
-# ---------------------------------------------------------------------------
 
 client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 voyage_client = voyageai.Client(api_key=os.environ["VOYAGE_API_KEY"])
@@ -200,7 +192,6 @@ def chunk_text(text: str, chunk_size: int = 300) -> list[str]:
         else:
             if current:
                 chunks.append(current)
-            # Sentence longer than chunk_size goes in on its own
             current = sentence
 
     if current:
@@ -334,7 +325,6 @@ FETCH_SQL = """
       )
     ORDER BY m.match_date ASC
 """
-
 
 UNEMBEDDED_SQL = """
     SELECT mr.id

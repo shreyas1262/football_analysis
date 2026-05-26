@@ -1,23 +1,15 @@
 import os
-import sys
 import time
 from decimal import Decimal
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import anthropic
 import psycopg2
 import psycopg2.extras
 from dotenv import load_dotenv
 
-from config import DB_CONFIG
+from football_analytics.config import DB_CONFIG
 
 load_dotenv()
-
-# ---------------------------------------------------------------------------
-# Anthropic client
-# ---------------------------------------------------------------------------
 
 client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
@@ -179,7 +171,6 @@ def run_anomaly_detection(competition_code: str = "PL") -> list[dict]:
         print(f"No data found for {competition_code}")
         return []
 
-    # League stats are identical across all rows (window functions) — take from first
     league_stats = {
         "league_avg_ppg": rows[0]["league_avg_ppg"],
         "league_avg_goals": rows[0]["league_avg_goals"],
@@ -233,10 +224,6 @@ def run_anomaly_detection(competition_code: str = "PL") -> list[dict]:
     print(f"Summary: {len(anomalous)} anomalous team(s) out of {len(rows)}\n")
     return anomalous
 
-
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     pl_anomalies = run_anomaly_detection("PL")

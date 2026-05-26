@@ -2,23 +2,14 @@ import os
 import time
 from decimal import Decimal
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 import anthropic
 import psycopg2
 import psycopg2.extras
 from dotenv import load_dotenv
 
-from config import DB_CONFIG
+from football_analytics.config import DB_CONFIG
 
 load_dotenv()
-
-# ---------------------------------------------------------------------------
-# Anthropic client
-# ---------------------------------------------------------------------------
 
 client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
@@ -89,7 +80,6 @@ def fetch_matches(competition_code: str, limit: int = 5) -> list[dict]:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute(sql, (competition_code, limit))
             rows = cur.fetchall()
-    # Convert any Decimal values to float
     return [
         {k: float(v) if isinstance(v, Decimal) else v for k, v in row.items()}
         for row in rows
@@ -167,10 +157,6 @@ def compare_temperatures(match: dict) -> None:
         print(f"{narrative}\n")
         time.sleep(1)
 
-
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     results = run_narratives(competition_code="PL", limit=5, temperature=0.8)

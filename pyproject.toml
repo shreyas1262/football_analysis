@@ -28,6 +28,9 @@ dependencies = [
     "mcp>=1.0.0",
     "pgvector>=0.3.0",
     "click>=8.1.0",
+    "uvicorn>=0.30.0",
+    "starlette>=0.40.0",
+    "anyio>=4.0.0",
 ]
 
 [project.optional-dependencies]
@@ -50,8 +53,11 @@ football-analytics = "football_analytics.cli:main"
 Homepage = "https://github.com/shreyastelkar/football-analytics"
 Repository = "https://github.com/shreyastelkar/football-analytics"
 
+[tool.hatch.build]
+sources = ["src"]
+
 [tool.hatch.build.targets.wheel]
-packages = ["football_analytics", "agent", "config"]
+packages = ["football_analytics"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -59,3 +65,4 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v --tb=short"
+pythonpath = ["src"]
