@@ -1,26 +1,17 @@
-import os
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 import json
+import os
 import re as _re
+from decimal import Decimal
 
 import anthropic
 import psycopg2
 import psycopg2.extras
-from decimal import Decimal
 from dotenv import load_dotenv
 
-from config import DB_CONFIG
-from nl_to_sql import validate_sql
+from football_analytics.config import DB_CONFIG
+from football_analytics.agent.nl_to_sql import validate_sql
 
 load_dotenv()
-
-# ---------------------------------------------------------------------------
-# Anthropic client
-# ---------------------------------------------------------------------------
 
 client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
@@ -432,12 +423,8 @@ def generate_eval_report(results: dict) -> None:
     print(bar)
 
 
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
-
 if __name__ == "__main__":
-    from football_agent import run_agent
+    from football_analytics.agent.football_agent import run_agent
 
     results = run_golden_dataset(run_agent)
     generate_eval_report(results)

@@ -1,9 +1,5 @@
 import json
 import os
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import uvicorn
 from mcp.server import Server
@@ -13,7 +9,7 @@ from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from agent.tool_handlers import ToolHandlers
+from football_analytics.agent.tool_handlers import ToolHandlers
 
 server = Server("football-analytics")
 
@@ -36,7 +32,6 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     if handler is None:
         result = json.dumps({"error": f"Unknown tool: {name}"})
     else:
-        # Strip keys the handler doesn't expect (e.g. extra MCP metadata)
         result = json.dumps(handler(**arguments), default=str)
 
     return [TextContent(type="text", text=result)]
@@ -82,22 +77,4 @@ def create_app() -> Starlette:
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
-    reload = os.getenv("MCP_RELOAD", "0") == "1"
-    if reload:
-        import subprocess
-        project_root = str(Path(__file__).parent.parent)
-        env = {**os.environ, "PYTHONPATH": project_root}
-        subprocess.run(
-            [
-                sys.executable, "-m", "uvicorn",
-                "mcp_entrypoint:create_app",
-                "--factory", "--reload",
-                "--reload-dir", project_root,
-                "--host", "0.0.0.0",
-                "--port", str(port),
-            ],
-            env=env,
-            cwd=project_root,
-        )
-    else:
-        uvicorn.run(create_app(), host="0.0.0.0", port=port)
+    uvicorn.run(create_app(), host="0.0.0.0", port=port)

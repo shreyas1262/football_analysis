@@ -1,16 +1,11 @@
 import json
 import os
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import anthropic
 from dotenv import load_dotenv
 
-from agent.nl_to_sql import nl_to_sql_pipeline
-
-from agent.tool_handlers import ToolHandlers
+from football_analytics.agent.nl_to_sql import nl_to_sql_pipeline
+from football_analytics.agent.tool_handlers import ToolHandlers
 
 load_dotenv()
 
@@ -18,7 +13,7 @@ client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
 # ---------------------------------------------------------------------------
 # Tool schemas
-# The agent adds two tools beyond the shared set: search_match_reports, nl_to_sql
+# The agent adds one tool beyond the shared set: nl_to_sql
 # ---------------------------------------------------------------------------
 
 TOOLS = ToolHandlers.SCHEMAS + [
@@ -124,6 +119,8 @@ def call_tool(name: str, inputs: dict) -> list[dict] | dict | str:
         return ToolHandlers.get_season_summary(
             inputs["competition_code"], inputs.get("season_start_year")
         )
+    elif name == "search_match_reports":
+        return ToolHandlers.search_match_reports(inputs["query"], inputs.get("limit", 5))
     elif name == "nl_to_sql":
         return nl_to_sql_pipeline(inputs["question"])
     return []

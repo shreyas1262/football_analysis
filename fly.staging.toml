@@ -17,4 +17,4 @@ primary_region = "sin"
   cpus = 1
 
 [deploy]
-  release_command = "python -c 'from config.db import get_conn; get_conn().close(); print(\"DB OK\")'"
+  release_command = "python -c 'from football_analytics.config import get_conn; get_conn().close(); print(\"DB OK\")'"

@@ -1,18 +1,14 @@
 import os
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
+import re
 
 import anthropic
 import psycopg2
 import psycopg2.extras
 import sqlparse
-import re
-from dotenv import load_dotenv
 from decimal import Decimal
+from dotenv import load_dotenv
 
-from config import DB_CONFIG
+from football_analytics.config import DB_CONFIG
 
 load_dotenv()
 
@@ -113,8 +109,6 @@ DANGEROUS_PATTERNS = [
 
 
 def validate_sql(sql: str) -> tuple[bool, str]:
-    import re
-
     if not sql or not sql.strip():
         return False, "Empty query"
 
@@ -213,7 +207,6 @@ def generate_sql(question: str, error_context: str | None = None) -> str:
 # ---------------------------------------------------------------------------
 
 def execute_sql(sql: str) -> tuple[bool, list, str]:
-    
     try:
         with psycopg2.connect(**DB_CONFIG) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
@@ -272,19 +265,16 @@ def nl_to_sql_pipeline(question: str, max_retries: int = 2) -> dict:
         if attempt > 0:
             sql = generate_sql(question, error_context)
 
-        # Validate
         valid, validation_error = validate_sql(sql)
         if not valid:
             error_context = f"Validation failed: {validation_error}. Generated SQL was: {sql}"
             continue
 
-        # Execute
         success, rows, exec_error = execute_sql(sql)
         if not success:
             error_context = f"Execution failed: {exec_error}. Generated SQL was: {sql}"
             continue
 
-        # Both passed
         answer = interpret_results(question, sql, rows)
         return {
             "question": question,
@@ -334,10 +324,6 @@ def run_demo() -> None:
         print(f"Attempts : {result['attempts']}")
         print(f"\nAnswer   : {result['answer']}")
 
-
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     run_demo()

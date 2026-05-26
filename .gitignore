@@ -230,3 +230,7 @@ venv/
 # OS
 .DS_Store
 football_marts.sql
+
+# VS Code
+.vscode/
+vscode/

@@ -1,11 +1,6 @@
-import sys
-from pathlib import Path
-
 import pytest
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from config.db import get_conn
+from football_analytics.config import get_conn
 
 
 @pytest.fixture
