@@ -11,6 +11,8 @@ COPY pyproject.toml README.md ./
 COPY src/ ./src/
 COPY mcp_entrypoint.py ./
 
+ENV PYTHONPATH=/app/src
+
 RUN pip install --no-cache-dir .
 
 EXPOSE 8000
