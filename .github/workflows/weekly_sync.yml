@@ -1,0 +1,75 @@
+name: Weekly Data Sync
+
+on:
+  schedule:
+    - cron: "0 6 * * 2"  # Every Tuesday at 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: football_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      FOOTBALL_DB_HOST: localhost
+      FOOTBALL_DB_PORT: "5432"
+      FOOTBALL_DB_NAME: football_db
+      FOOTBALL_DB_USER: postgres
+      FOOTBALL_DB_PASSWORD: postgres
+      PGPASSWORD: postgres  # used by psql/pg_dump for the local service container
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -e ".[dev,airflow]"
+
+      - name: Initialise database schema
+        run: psql -h localhost -U postgres -d football_db -f sql/init.sql
+
+      - name: Ingest football data
+        run: python airflow/dags/football_ingestion.py
+        env:
+          FOOTBALL_API_KEY: ${{ secrets.FOOTBALL_API_KEY }}
+
+      - name: dbt run
+        run: dbt run --profiles-dir dbt/ --profile ci
+
+      - name: dbt test
+        run: dbt test --profiles-dir dbt/ --profile ci
+
+      - name: Dump marts schema and restore to Supabase
+        run: |
+          pg_dump \
+            -h localhost -U postgres -d football_db \
+            -n marts --no-owner --no-acl --clean --if-exists \
+            > /tmp/marts.sql
+
+          PGPASSWORD="${{ secrets.SUPABASE_PASSWORD }}" \
+          PGSSLMODE=require \
+          psql \
+            -h "${{ secrets.SUPABASE_HOST }}" \
+            -p "${{ secrets.SUPABASE_PORT }}" \
+            -U "${{ secrets.SUPABASE_USER }}" \
+            -d "${{ secrets.SUPABASE_DB }}" \
+            -f /tmp/marts.sql
+
