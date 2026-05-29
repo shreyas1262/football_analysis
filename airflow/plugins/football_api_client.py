@@ -38,12 +38,16 @@ class FootballAPIClient:
             team["_competition_id"] = competition_id
         return data["teams"]
 
-    def get_matches(self, competition_code, season=None, status=None):
+    def get_matches(self, competition_code, season=None, status=None, date_from=None, date_to=None):
         params = {}
         if season is not None:
             params["season"] = season
         if status is not None:
             params["status"] = status
+        if date_from is not None:
+            params["dateFrom"] = date_from
+        if date_to is not None:
+            params["dateTo"] = date_to
         data = self._get(f"/competitions/{competition_code}/matches", params=params or None)
         return data["matches"]
 
