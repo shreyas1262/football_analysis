@@ -10,3 +10,16 @@ football_analytics:
       dbname: football_db
       schema: staging
       threads: 4
+
+ci:
+  target: default
+  outputs:
+    default:
+      type: postgres
+      host: "{{ env_var('FOOTBALL_DB_HOST', 'localhost') }}"
+      port: "{{ env_var('FOOTBALL_DB_PORT', '5432') | int }}"
+      user: "{{ env_var('FOOTBALL_DB_USER') }}"
+      password: "{{ env_var('FOOTBALL_DB_PASSWORD') }}"
+      dbname: "{{ env_var('FOOTBALL_DB_NAME') }}"
+      schema: marts
+      threads: 4
