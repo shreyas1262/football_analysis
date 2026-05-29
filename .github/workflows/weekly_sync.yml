@@ -52,10 +52,12 @@ jobs:
           FOOTBALL_API_KEY: ${{ secrets.FOOTBALL_API_KEY }}
 
       - name: dbt run
-        run: dbt run --profiles-dir dbt/ --profile ci
+        run: dbt run --profiles-dir ./ --profile ci
+        working-directory: dbt
 
       - name: dbt test
-        run: dbt test --profiles-dir dbt/ --profile ci
+        run: dbt test --profiles-dir ./ --profile ci
+        working-directory: dbt
 
       - name: Dump marts schema and restore to Supabase
         run: |
