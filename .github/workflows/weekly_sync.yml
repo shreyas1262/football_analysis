@@ -41,7 +41,7 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: pip install -e ".[dev,airflow]"
+        run: pip install -e ".[dev,airflow,dbt]"
 
       - name: Initialise database schema
         run: psql -h localhost -U postgres -d football_db -f sql/init.sql

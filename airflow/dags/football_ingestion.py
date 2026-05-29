@@ -6,8 +6,12 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import psycopg2
-from airflow.decorators import dag, task
-from airflow.operators.bash import BashOperator
+try:
+    from airflow.sdk import dag, task
+    from airflow.providers.standard.operators.bash import BashOperator
+except ImportError:
+    from airflow.decorators import dag, task  # type: ignore[no-redef]
+    from airflow.operators.bash import BashOperator  # type: ignore[no-redef]
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "plugins"))
 from football_api_client import FootballAPIClient  # noqa: E402
