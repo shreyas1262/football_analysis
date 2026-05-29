@@ -26,14 +26,6 @@ default_args = {
 }
 
 
-def get_current_season() -> int:
-    today = datetime.now(timezone.utc)
-    return today.year if today.month >= 8 else today.year - 1
-
-
-def _competition_seasons() -> dict:
-    season = get_current_season()
-    return {code: [season] for code in COMPETITION_CODES}
 
 
 def _connect() -> psycopg2.extensions.connection:
@@ -121,39 +113,38 @@ def _run_ingest_teams(dag_id="manual", task_id="manual"):
     conn = _connect()
     client = FootballAPIClient()
     try:
-        for code, seasons in _competition_seasons().items():
-            for season in seasons:
-                try:
-                    teams = client.get_teams(code, season=season)
-                except Exception as exc:
-                    logger.warning("Failed %s %s: %s", code, season, exc)
-                    continue
-                with conn.cursor() as cur:
-                    for team in teams:
-                        cur.execute(
-                            """
-                            INSERT INTO raw.teams
-                                (id, name, short_name, tla, competition_id,
-                                 area_name, raw_payload, ingested_at)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
-                            ON CONFLICT (id) DO UPDATE SET
-                                name           = EXCLUDED.name,
-                                short_name     = EXCLUDED.short_name,
-                                tla            = EXCLUDED.tla,
-                                competition_id = EXCLUDED.competition_id,
-                                area_name      = EXCLUDED.area_name,
-                                raw_payload    = EXCLUDED.raw_payload,
-                                ingested_at    = EXCLUDED.ingested_at
-                            """,
-                            (
-                                team["id"], team.get("name"), team.get("shortName"),
-                                team.get("tla"), team.get("_competition_id"),
-                                team.get("area", {}).get("name"), json.dumps(team),
-                            ),
-                        )
-                        count += 1
-                conn.commit()
-                logger.info("Upserted teams for %s %s (running total: %d)", code, season, count)
+        for code in COMPETITION_CODES:
+            try:
+                teams = client.get_teams(code)
+            except Exception as exc:
+                logger.warning("Failed %s: %s", code, exc)
+                continue
+            with conn.cursor() as cur:
+                for team in teams:
+                    cur.execute(
+                        """
+                        INSERT INTO raw.teams
+                            (id, name, short_name, tla, competition_id,
+                             area_name, raw_payload, ingested_at)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
+                        ON CONFLICT (id) DO UPDATE SET
+                            name           = EXCLUDED.name,
+                            short_name     = EXCLUDED.short_name,
+                            tla            = EXCLUDED.tla,
+                            competition_id = EXCLUDED.competition_id,
+                            area_name      = EXCLUDED.area_name,
+                            raw_payload    = EXCLUDED.raw_payload,
+                            ingested_at    = EXCLUDED.ingested_at
+                        """,
+                        (
+                            team["id"], team.get("name"), team.get("shortName"),
+                            team.get("tla"), team.get("_competition_id"),
+                            team.get("area", {}).get("name"), json.dumps(team),
+                        ),
+                    )
+                    count += 1
+            conn.commit()
+            logger.info("Upserted teams for %s (running total: %d)", code, count)
     except Exception as exc:
         conn.rollback()
         status = "failure"
@@ -175,15 +166,15 @@ def _run_ingest_matches(dag_id="manual", task_id="manual"):
     conn = _connect()
     client = FootballAPIClient()
     try:
-        for code, seasons in _competition_seasons().items():
-            for season in seasons:
-                try:
-                    matches = client.get_matches(code, season=season)
-                except Exception as exc:
-                    logger.warning("Failed %s %s: %s", code, season, exc)
-                    continue
-                with conn.cursor() as cur:
-                    for match in matches:
+        date_from = (datetime.now(timezone.utc) - timedelta(days=15)).strftime("%Y-%m-%d")
+        for code in COMPETITION_CODES:
+            try:
+                matches = client.get_matches(code, date_from=date_from)
+            except Exception as exc:
+                logger.warning("Failed %s: %s", code, exc)
+                continue
+            with conn.cursor() as cur:
+                for match in matches:
                         score = match.get("score", {})
                         full_time = score.get("fullTime") or {}
                         half_time = score.get("halfTime") or {}
@@ -237,7 +228,7 @@ def _run_ingest_matches(dag_id="manual", task_id="manual"):
                         )
                         count += 1
                 conn.commit()
-                logger.info("Upserted matches for %s %s (running total: %d)", code, season, count)
+                logger.info("Upserted matches for %s (running total: %d)", code, count)
     except Exception as exc:
         conn.rollback()
         status = "failure"
@@ -259,54 +250,53 @@ def _run_ingest_standings(dag_id="manual", task_id="manual"):
     conn = _connect()
     client = FootballAPIClient()
     try:
-        for code, seasons in _competition_seasons().items():
-            for season in seasons:
-                try:
-                    standings = client.get_standings(code, season=season)
-                except Exception as exc:
-                    logger.warning("Failed %s %s: %s", code, season, exc)
-                    continue
-                with conn.cursor() as cur:
-                    for entry in standings:
-                        cur.execute(
-                            """
-                            INSERT INTO raw.standings (
-                                competition_id, season_id, team_id, team_name,
-                                position, played_games, won, draw, lost, points,
-                                goals_for, goals_against, goal_difference,
-                                raw_payload, ingested_at
-                            ) VALUES (
-                                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                                %s, %s, %s, %s, NOW()
-                            )
-                            ON CONFLICT (competition_id, season_id, team_id) DO UPDATE SET
-                                team_name       = EXCLUDED.team_name,
-                                position        = EXCLUDED.position,
-                                played_games    = EXCLUDED.played_games,
-                                won             = EXCLUDED.won,
-                                draw            = EXCLUDED.draw,
-                                lost            = EXCLUDED.lost,
-                                points          = EXCLUDED.points,
-                                goals_for       = EXCLUDED.goals_for,
-                                goals_against   = EXCLUDED.goals_against,
-                                goal_difference = EXCLUDED.goal_difference,
-                                raw_payload     = EXCLUDED.raw_payload,
-                                ingested_at     = EXCLUDED.ingested_at
-                            """,
-                            (
-                                entry.get("_competition_id"), entry.get("_season_id"),
-                                entry.get("team", {}).get("id"),
-                                entry.get("team", {}).get("name"),
-                                entry.get("position"), entry.get("playedGames"),
-                                entry.get("won"), entry.get("draw"), entry.get("lost"),
-                                entry.get("points"), entry.get("goalsFor"),
-                                entry.get("goalsAgainst"), entry.get("goalDifference"),
-                                json.dumps(entry),
-                            ),
+        for code in COMPETITION_CODES:
+            try:
+                standings = client.get_standings(code)
+            except Exception as exc:
+                logger.warning("Failed %s: %s", code, exc)
+                continue
+            with conn.cursor() as cur:
+                for entry in standings:
+                    cur.execute(
+                        """
+                        INSERT INTO raw.standings (
+                            competition_id, season_id, team_id, team_name,
+                            position, played_games, won, draw, lost, points,
+                            goals_for, goals_against, goal_difference,
+                            raw_payload, ingested_at
+                        ) VALUES (
+                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                            %s, %s, %s, %s, NOW()
                         )
-                        count += 1
-                conn.commit()
-                logger.info("Upserted standings for %s %s (running total: %d)", code, season, count)
+                        ON CONFLICT (competition_id, season_id, team_id) DO UPDATE SET
+                            team_name       = EXCLUDED.team_name,
+                            position        = EXCLUDED.position,
+                            played_games    = EXCLUDED.played_games,
+                            won             = EXCLUDED.won,
+                            draw            = EXCLUDED.draw,
+                            lost            = EXCLUDED.lost,
+                            points          = EXCLUDED.points,
+                            goals_for       = EXCLUDED.goals_for,
+                            goals_against   = EXCLUDED.goals_against,
+                            goal_difference = EXCLUDED.goal_difference,
+                            raw_payload     = EXCLUDED.raw_payload,
+                            ingested_at     = EXCLUDED.ingested_at
+                        """,
+                        (
+                            entry.get("_competition_id"), entry.get("_season_id"),
+                            entry.get("team", {}).get("id"),
+                            entry.get("team", {}).get("name"),
+                            entry.get("position"), entry.get("playedGames"),
+                            entry.get("won"), entry.get("draw"), entry.get("lost"),
+                            entry.get("points"), entry.get("goalsFor"),
+                            entry.get("goalsAgainst"), entry.get("goalDifference"),
+                            json.dumps(entry),
+                        ),
+                    )
+                    count += 1
+            conn.commit()
+            logger.info("Upserted standings for %s (running total: %d)", code, count)
     except Exception as exc:
         conn.rollback()
         status = "failure"
