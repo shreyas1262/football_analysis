@@ -20,7 +20,9 @@ class FootballAPIClient:
         url = f"{BASE_URL}{path}"
         logger.info("GET %s params=%s", url, params)
         response = self.session.get(url, params=params, timeout=30)
-        response.raise_for_status()
+        if not response.ok:
+            logger.error("HTTP %s %s — %s", response.status_code, url, response.text)
+            response.raise_for_status()
         time.sleep(RATE_LIMIT_SLEEP)
         return response.json()
 
