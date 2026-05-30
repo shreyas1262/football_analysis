@@ -22,6 +22,13 @@ class FootballAPIClient:
         response = self.session.get(url, params=params, timeout=30)
         if not response.ok:
             logger.error("HTTP %s %s — %s", response.status_code, url, response.text)
+            if response.status_code == 429:
+                try:
+                    wait = int(response.json().get("message", "").split("Wait ")[-1].split(" ")[0])
+                except Exception:
+                    wait = RATE_LIMIT_SLEEP
+                logger.info("Rate limited — sleeping %ss", wait)
+                time.sleep(wait)
             response.raise_for_status()
         time.sleep(RATE_LIMIT_SLEEP)
         return response.json()

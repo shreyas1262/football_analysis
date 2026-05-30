@@ -2,7 +2,7 @@ version: 2
 
 sources:
   - name: raw
-    database: football_db
+    database: postgres
     schema: raw
     tables:
       - name: competitions

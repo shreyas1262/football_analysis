@@ -16,10 +16,11 @@ ci:
   outputs:
     default:
       type: postgres
-      host: "{{ env_var('FOOTBALL_DB_HOST', 'localhost') }}"
-      port: "{{ env_var('FOOTBALL_DB_PORT', '5432') | int }}"
-      user: "{{ env_var('FOOTBALL_DB_USER') }}"
-      password: "{{ env_var('FOOTBALL_DB_PASSWORD') }}"
-      dbname: "{{ env_var('FOOTBALL_DB_NAME') }}"
-      schema: marts
+      host: "{{ env_var('SUPABASE_HOST') }}"
+      port: "{{ env_var('SUPABASE_PORT', '5432') | int }}"
+      user: "{{ env_var('SUPABASE_USER') }}"
+      password: "{{ env_var('SUPABASE_PASSWORD') }}"
+      dbname: "{{ env_var('SUPABASE_DB', 'postgres') }}"
+      schema: public
+      sslmode: require
       threads: 4

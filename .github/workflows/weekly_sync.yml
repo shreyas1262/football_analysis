@@ -9,28 +9,12 @@ jobs:
   sync:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: pgvector/pgvector:pg15
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: football_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     env:
-      FOOTBALL_DB_HOST: localhost
-      FOOTBALL_DB_PORT: "5432"
-      FOOTBALL_DB_NAME: football_db
-      FOOTBALL_DB_USER: postgres
-      FOOTBALL_DB_PASSWORD: postgres
-      PGPASSWORD: postgres  # used by psql/pg_dump for the local service container
+      SUPABASE_HOST: ${{ secrets.SUPABASE_HOST }}
+      SUPABASE_PORT: ${{ secrets.SUPABASE_PORT }}
+      SUPABASE_DB: ${{ secrets.SUPABASE_DB }}
+      SUPABASE_USER: ${{ secrets.SUPABASE_USER }}
+      SUPABASE_PASSWORD: ${{ secrets.SUPABASE_PASSWORD }}
 
     steps:
       - uses: actions/checkout@v4
@@ -42,9 +26,6 @@ jobs:
 
       - name: Install dependencies
         run: pip install -e ".[dev,airflow,dbt]"
-
-      - name: Initialise database schema
-        run: psql -h localhost -U postgres -d football_db -f sql/init.sql
 
       - name: Ingest football data
         run: python airflow/dags/football_ingestion.py
@@ -59,19 +40,8 @@ jobs:
         run: dbt test --profiles-dir ./ --profile ci
         working-directory: dbt
 
-      - name: Dump marts schema and restore to Supabase
-        run: |
-          pg_dump \
-            -h localhost -U postgres -d football_db \
-            -n marts --no-owner --no-acl --clean --if-exists \
-            > /tmp/marts.sql
-
-          PGPASSWORD="${{ secrets.SUPABASE_PASSWORD }}" \
-          PGSSLMODE=require \
-          psql \
-            -h "${{ secrets.SUPABASE_HOST }}" \
-            -p "${{ secrets.SUPABASE_PORT }}" \
-            -U "${{ secrets.SUPABASE_USER }}" \
-            -d "${{ secrets.SUPABASE_DB }}" \
-            -f /tmp/marts.sql
-
+      - name: Generate match narratives and embeddings
+        run: python -m football_analytics.agent.generate_and_store_narratives --yes
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
