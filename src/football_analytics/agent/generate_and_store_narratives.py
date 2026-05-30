@@ -1,6 +1,10 @@
 import os
 import re
+import sys
 import time
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from decimal import Decimal
 
 import anthropic
@@ -338,6 +342,7 @@ UNEMBEDDED_SQL = """
 
 
 def main() -> None:
+    auto_confirm = "--yes" in sys.argv
     with psycopg2.connect(**DB_CONFIG) as conn:
         ensure_unique_constraint(conn)
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
@@ -361,11 +366,11 @@ def main() -> None:
     print(f"  Reports without embeddings : {len(unembedded_ids)}")
     print(f"  Estimated cost             : ${estimated_cost:.2f} (Haiku, ~500 tokens/narrative)")
     print(f"{'='*70}")
-    print("Continue? (y/n) ", end="", flush=True)
-
-    if input().strip().lower() != "y":
-        print("Aborted.")
-        return
+    if not auto_confirm:
+        print("Continue? (y/n) ", end="", flush=True)
+        if input().strip().lower() != "y":
+            print("Aborted.")
+            return
 
     if total_matches > 0:
         print(f"\n{'='*70}")
