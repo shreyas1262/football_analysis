@@ -41,7 +41,7 @@ jobs:
         working-directory: dbt
 
       - name: Generate match narratives and embeddings
-        run: python -m football_analytics.agent.generate_and_store_narratives --yes
+        run: python src/football_analytics/agent/generate_and_store_narratives.py --yes
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
