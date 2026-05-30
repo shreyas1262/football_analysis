@@ -7,3 +7,4 @@ SELECT
     plan,
     ingested_at
 FROM {{ source('raw', 'competitions') }}
+WHERE code IS NOT NULL
