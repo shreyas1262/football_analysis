@@ -59,6 +59,63 @@ def stats():
 
 
 @main.command()
+@click.option("--seasons", default=None, help="Comma-separated seasons to ingest, e.g. 2023,2022")
+@click.option("--full", "full_ingest", is_flag=True, help="Ingest current and previous season")
+@click.option("--skip-dbt", is_flag=True, help="Skip dbt run and test")
+@click.option("--skip-narratives", is_flag=True, help="Skip narrative and embedding generation")
+@click.option("--yes", "-y", "auto_confirm", is_flag=True, help="Skip cost confirmation prompt")
+def sync(seasons, full_ingest, skip_dbt, skip_narratives, auto_confirm):
+    """Run the full data pipeline: ingest → dbt → narratives.
+
+    Examples:
+      football-analytics sync
+      football-analytics sync --full
+      football-analytics sync --seasons 2023,2022
+    """
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    root = Path(__file__).parent.parent.parent.parent  # repo root
+
+    # --- ingest ---
+    ingest_args = [sys.executable, str(root / "airflow/dags/football_ingestion.py")]
+    if seasons:
+        ingest_args += ["--seasons", seasons]
+    elif full_ingest:
+        ingest_args.append("--full")
+    click.echo("Running ingestion...")
+    result = subprocess.run(ingest_args)
+    if result.returncode != 0:
+        raise SystemExit(result.returncode)
+
+    # --- dbt ---
+    if not skip_dbt:
+        dbt_dir = root / "dbt"
+        click.echo("Running dbt run...")
+        r = subprocess.run(["dbt", "run", "--profiles-dir", "./", "--profile", "ci"], cwd=dbt_dir)
+        if r.returncode != 0:
+            raise SystemExit(r.returncode)
+        click.echo("Running dbt test...")
+        r = subprocess.run(["dbt", "test", "--profiles-dir", "./", "--profile", "ci"], cwd=dbt_dir)
+        if r.returncode != 0:
+            raise SystemExit(r.returncode)
+
+    # --- narratives ---
+    if not skip_narratives:
+        click.echo("Generating narratives and embeddings...")
+        narrative_script = root / "src/football_analytics/agent/generate_and_store_narratives.py"
+        narrative_args = [sys.executable, str(narrative_script)]
+        if auto_confirm:
+            narrative_args.append("--yes")
+        r = subprocess.run(narrative_args)
+        if r.returncode != 0:
+            raise SystemExit(r.returncode)
+
+    click.echo("Sync complete.")
+
+
+@main.command()
 def health():
     """Check database connection and API key status."""
     checks = {
