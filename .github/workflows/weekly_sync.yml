@@ -25,7 +25,7 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: pip install -e ".[dev,airflow,dbt]"
+        run: pip install -e ".[dev,airflow,dbt]" "dbt-core<2.0.0"
 
       - name: Ingest football data
         run: python airflow/dags/football_ingestion.py
