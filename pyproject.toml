@@ -43,7 +43,7 @@ airflow = [
     "apache-airflow-providers-postgres>=5.0.0",
 ]
 dbt = [
-    "dbt-postgres>=1.8.0",
+    "dbt-postgres>=1.8.0,<2.0.0",
 ]
 
 [project.scripts]

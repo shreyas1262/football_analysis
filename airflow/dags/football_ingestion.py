@@ -35,10 +35,10 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 
-
-
-
 def _connect() -> psycopg2.extensions.connection:
+    """
+    Establish a connection to the PostgreSQL database.
+    """
     supabase_host = os.environ.get("SUPABASE_HOST")
     if supabase_host:
         return psycopg2.connect(
@@ -60,6 +60,9 @@ def _connect() -> psycopg2.extensions.connection:
 
 def _write_ingestion_log(conn, dag_id, task_id, entity_type, records_ingested,
                          status, error_message, started_at, finished_at):
+    """
+    Write ingestion log to the database.
+    """
     with conn.cursor() as cur:
         cur.execute(
             """
@@ -79,6 +82,9 @@ def _write_ingestion_log(conn, dag_id, task_id, entity_type, records_ingested,
 # ---------------------------------------------------------------------------
 
 def _run_ingest_competitions(dag_id="manual", task_id="manual"):
+    """
+    Ingest football competitions data.
+    """
     started_at = datetime.now(timezone.utc)
     count = 0
     error_message = None
@@ -126,6 +132,9 @@ def _run_ingest_competitions(dag_id="manual", task_id="manual"):
 
 
 def _run_ingest_teams(dag_id="manual", task_id="manual"):
+    """
+    Ingest football teams data.
+    """
     started_at = datetime.now(timezone.utc)
     count = 0
     error_message = None
@@ -194,6 +203,7 @@ def _run_ingest_matches(dag_id="manual", task_id="manual", date_from=None, seaso
                 except Exception as exc:
                     logger.warning("Failed %s season=%s: %s", code, season, exc)
                     continue
+                
                 with conn.cursor() as cur:
                     for match in matches:
                         score = match.get("score", {})
@@ -456,18 +466,23 @@ if __name__ == "__main__":
         format="%(asctime)s %(levelname)s %(message)s",
         datefmt="%Y-%m-%dT%H:%M:%S",
     )
-    full_ingest = "--full" in sys.argv
-    date_from = None if full_ingest else (
-        datetime.now(timezone.utc) - timedelta(days=15)
-    ).strftime("%Y-%m-%d")
-
-    if full_ingest:
-        logger.info("Full ingest mode — no date filter")
+    # --seasons 2023,2022  →  ingest specific seasons, no date filter
+    # --full               →  ingest current and previous season, no date filter
+    # (no args)            →  incremental: last 15 days of current season
+    if "--seasons" in sys.argv:
+        raw = sys.argv[sys.argv.index("--seasons") + 1]
+        seasons = [int(y) for y in raw.split(",")]
+        date_from = None
+        logger.info("Season ingest mode — seasons=%s", seasons)
+    elif "--full" in sys.argv:
+        current = get_current_season()
+        seasons = [current - 1, current]
+        date_from = None
+        logger.info("Full ingest mode — seasons=%s", seasons)
     else:
+        seasons = None
+        date_from = (datetime.now(timezone.utc) - timedelta(days=15)).strftime("%Y-%m-%d")
         logger.info("Incremental ingest mode — dateFrom=%s", date_from)
-
-    current = get_current_season()
-    seasons = [current - 1, current] if full_ingest else None
     try:
         _run_ingest_competitions()
         _run_ingest_teams()
