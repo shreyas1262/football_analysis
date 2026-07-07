@@ -234,3 +234,9 @@ football_marts.sql
 # VS Code
 .vscode/
 vscode/
+
+# downloaded_files
+downloaded_files/
+
+# Delta Lake bronze layer
+data/

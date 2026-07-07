@@ -9,3 +9,8 @@ sources:
       - name: teams
       - name: matches
       - name: standings
+
+  - name: bronze
+    tables:
+      - name: fbref_schedule
+      - name: fbref_player_season_stats_standard
