@@ -4,11 +4,10 @@ with source as (
 
 renamed as (
     select
-        -- match key: extract FBref's hash from the match URL (matches schedule.game_id)
-        regexp_extract(match_report, '/en/matches/([a-f0-9]+)/', 1) as match_id,
-
         -- per-row primary key: one row per team per match
         {{ dbt_utils.generate_surrogate_key(['match_report', 'team']) }} as team_match_id,
+        -- match key: extract FBref's hash from the match URL (matches schedule.game_id)
+        regexp_extract(match_report, '/en/matches/([a-f0-9]+)/', 1) as match_id,
 
         league,
         season,
