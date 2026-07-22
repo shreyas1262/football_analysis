@@ -1,7 +1,7 @@
 with source as (
     select
         *
-    from {{ source('bronze', 'fbref_player_season_stats_playing_misc') }}
+    from {{ source('bronze', 'fbref_player_season_stats_misc') }}
 ), renamed as (
     select
         -- surrogate player ID - stable across seasons
@@ -19,7 +19,7 @@ with source as (
         performance_2crdy::integer  as second_yellow_card,
         performance_fls::integer    as fouls_committed,
         performance_fld::integer    as fouls_drawn,
-        performance_off::integer    as was_offside,
+        performance_off::integer    as offsides,
         performance_crs::integer    as crosses_attempted,
         performance_int::integer    as interceptions,
         performance_tklw::integer   as tackles_won,

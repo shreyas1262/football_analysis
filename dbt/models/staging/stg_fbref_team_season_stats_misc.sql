@@ -1,26 +1,21 @@
 with source as (
-    select * from {{ source('bronze', 'fbref_team_match_stats_misc') }}
+    select * from {{ source('bronze', 'fbref_team_season_stats_misc') }}
 ),
 
 renamed as (
     select
-        -- per-row primary key: one row per team per match
-        {{ dbt_utils.generate_surrogate_key(['match_report', 'team']) }} as team_match_id,
-        -- match key: extract FBref's hash from the match URL (matches schedule.game_id)
-        regexp_extract(match_report, '/en/matches/([a-f0-9]+)/', 1) as match_id,
+        -- composite primary key: one row per team per season
+        regexp_extract(url, '/en/squads/([a-f0-9]+)/', 1) as team_id,
+        season,
 
         league,
-        season,
         team,
-        opponent,
-        -- date from the game string, not the tz-aware `date` column (avoids off-by-one)
-        split_part(game, ' ', 1)::date      as match_date,
-        venue,
-        result,
+
+        -- playing time
+        players_used::integer       as players_used,
+        n_90s::integer              as minutes_90s,
 
         -- misc team stats
-        gf::integer                 as goals_for,
-        ga::integer                 as goals_against,
         performance_crdy::integer   as yellow_cards,
         performance_crdr::integer   as red_cards,
         performance_2crdy::integer  as second_yellow_card,
@@ -33,8 +28,8 @@ renamed as (
         performance_pkwon::integer  as penalties_won,
         performance_pkcon::integer  as penalties_conceded,
         performance_og::integer     as own_goals
+
     from source
-    where league != 'nan'  -- league matches only; cup data is incomplete
 )
 
 select * from renamed

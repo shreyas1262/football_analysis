@@ -1,7 +1,7 @@
 with source as (
     select
         *
-    from {{ source('bronze', 'fbref_player_season_stats_playing_misc') }}
+    from {{ source('bronze', 'fbref_player_season_stats_keeper') }}
 ), renamed as (
     select
         -- surrogate player ID - stable across seasons

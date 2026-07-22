@@ -1,3 +1,5 @@
+{{ config(enabled=false) }}  -- LEGACY (football-data.org); rebuild on FBref
+
 SELECT
     s.competition_id,
     s.season_id,

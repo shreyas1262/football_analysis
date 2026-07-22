@@ -1,3 +1,5 @@
+{{ config(enabled=false) }}  -- LEGACY (football-data.org); rebuild on FBref
+
 WITH all_matches AS (
     SELECT
         match_id,

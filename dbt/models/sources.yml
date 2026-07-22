@@ -1,16 +1,36 @@
 version: 2
 
 sources:
-  - name: raw
-    database: postgres
-    schema: raw
-    tables:
-      - name: competitions
-      - name: teams
-      - name: matches
-      - name: standings
-
   - name: bronze
+    description: "Raw FBref tables scraped via soccerdata, stored as Delta Lake."
+    # dbt-duckdb resolves each source('bronze', <name>) to a delta_scan of the
+    # matching folder. {name} is substituted with the table's identifier below.
+    meta:
+      external_location: "delta_scan('{{ env_var('BRONZE_PATH', '../data/bronze') }}/{name}')"
     tables:
+      # dimensions
+      - name: fbref_leagues
+      - name: fbref_seasons
+
+      # schedule
       - name: fbref_schedule
+
+      # player season stats
       - name: fbref_player_season_stats_standard
+      - name: fbref_player_season_stats_shooting
+      - name: fbref_player_season_stats_keeper
+      - name: fbref_player_season_stats_playing_time
+      - name: fbref_player_season_stats_misc
+
+      # team season stats
+      - name: fbref_team_season_stats_standard
+      - name: fbref_team_season_stats_shooting
+      - name: fbref_team_season_stats_keeper
+      - name: fbref_team_season_stats_playing_time
+      - name: fbref_team_season_stats_misc
+
+      # team match stats
+      - name: fbref_team_match_stats_schedule
+      - name: fbref_team_match_stats_shooting
+      - name: fbref_team_match_stats_keeper
+      - name: fbref_team_match_stats_misc

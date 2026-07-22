@@ -19,7 +19,7 @@ with source as (
         -- playing_time
         playing_time_mp::integer     as matches_played,
         playing_time_starts::integer as matches_started,
-        playing_time_mins::integer   as minutes_played,
+        playing_time_min::integer    as minutes_played,
         playing_time_90s::integer    as minutes_played_per_90,
 
         -- goals and assists
@@ -29,14 +29,14 @@ with source as (
         performance_pk::integer      as penalty_goals,
         performance_pkatt::integer   as penalty_attempts,
         performance_crdy::integer    as yellow_cards,
-        performance_crdr::integer    as red_cards
+        performance_crdr::integer    as red_cards,
 
         -- per_90_minutes
-        per_90_minutes_gls           as goals_per_90,
-        per_90_minutes_ast           as assists_per_90,
-        per_90_minutes_g_a           as goals_and_assists_per_90,
-        per_90_minutes_g_pk          as non_penalty_goals_per_90,
-        per_90_minutes_g_a_pk        as non_penalty_goals_and_assists_per_90
+        per_90_minutes_gls::float    as goals_per_90,
+        per_90_minutes_ast::float    as assists_per_90,
+        per_90_minutes_g_a::float    as goals_and_assists_per_90,
+        per_90_minutes_g_pk::float   as non_penalty_goals_per_90,
+        per_90_minutes_g_a_pk::float as non_penalty_goals_and_assists_per_90
 
     from source
 )

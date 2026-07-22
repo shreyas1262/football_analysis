@@ -7,9 +7,9 @@ with matches as (
         league,
         season,
         home_team as team,
-        sum(case 
-            when home_goals > away_goals then 3
-            when home_goals = away_goals then 1
+        sum(case
+            when home_score > away_score then 3
+            when home_score = away_score then 1
             else 0
         end) as points,
         count(*) as played
@@ -20,9 +20,9 @@ with matches as (
         league,
         season,
         away_team as team,
-        sum(case 
-            when away_goals > home_goals then 3
-            when away_goals = home_goals then 1
+        sum(case
+            when away_score > home_score then 3
+            when away_score = home_score then 1
             else 0
         end) as points,
         count(*) as played

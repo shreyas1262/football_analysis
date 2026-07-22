@@ -1,31 +1,74 @@
 version: 2
 
 models:
-  - name: stg_competitions
-    columns:
-      - name: competition_id
-        tests: [unique, not_null]
-      - name: competition_code
-        tests: [not_null]
-
-  - name: stg_teams
-    columns:
-      - name: team_id
-        tests: [unique, not_null]
-
-  - name: stg_matches
+  # ---- schedule ----
+  - name: stg_fbref_schedule
+    description: "One row per match (Big 5 leagues)."
     columns:
       - name: match_id
+        description: "FBref native match hash."
         tests: [unique, not_null]
-      - name: status
-        tests:
-          - accepted_values:
-              arguments:
-                values: ['FINISHED']
 
-  - name: stg_standings
+  # ---- player season stats ----
+  - name: stg_fbref_player_season_stats_standard
+    description: "One row per player per team per season."
+    columns:
+      - name: player_id
+        description: "Surrogate hash of (player, born, nation) — stable across seasons."
+        tests: [not_null]
+
+  # ---- team season stats (composite PK: team_id + season) ----
+  - name: stg_fbref_team_season_stats_standard
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [team_id, season]
     columns:
       - name: team_id
         tests: [not_null]
-      - name: points
-        tests: [not_null]
+
+  - name: stg_fbref_team_season_stats_shooting
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [team_id, season]
+
+  - name: stg_fbref_team_season_stats_keeper
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [team_id, season]
+
+  - name: stg_fbref_team_season_stats_playing_time
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [team_id, season]
+
+  - name: stg_fbref_team_season_stats_misc
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [team_id, season]
+
+  # ---- team match stats (PK: team_match_id, FK: match_id -> schedule) ----
+  - name: stg_fbref_team_match_stats_shooting
+    columns:
+      - name: team_match_id
+        tests: [unique, not_null]
+      - name: match_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_fbref_schedule')
+              field: match_id
+
+  - name: stg_fbref_team_match_stats_keeper
+    columns:
+      - name: team_match_id
+        tests: [unique, not_null]
+
+  - name: stg_fbref_team_match_stats_misc
+    columns:
+      - name: team_match_id
+        tests: [unique, not_null]

@@ -1,7 +1,16 @@
 football_analytics:
-  target: dev
+  target: duckdb
   outputs:
-    dev:
+    # Local analytical engine — reads Delta bronze directly, materializes silver/gold
+    duckdb:
+      type: duckdb
+      path: "{{ env_var('DBT_DUCKDB_PATH', '../data/warehouse.duckdb') }}"
+      extensions:
+        - delta
+      threads: 4
+
+    # Postgres serving layer (for the MCP server) — used later
+    postgres:
       type: postgres
       host: postgres
       port: 5432

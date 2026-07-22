@@ -31,6 +31,7 @@ renamed as (
         attendance::integer             as attendance,
         referee
     from source
+    where league != 'nan'  -- league matches only; cup data is incomplete
 )
 
-select * from renamed;
+select * from renamed

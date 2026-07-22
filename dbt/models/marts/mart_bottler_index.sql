@@ -1,3 +1,5 @@
+{{ config(enabled=false) }}  -- LEGACY (football-data.org); rebuild on FBref
+
 WITH ht_winning AS (
     SELECT
         competition_id,

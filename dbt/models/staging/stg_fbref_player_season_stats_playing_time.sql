@@ -30,7 +30,7 @@ with source as (
         team_success_ong::double as team_goals_scored_when_on_pitch,
         team_success_onga::double as team_goals_conceded_when_on_pitch,
         team_success::double as team_goal_difference_when_on_pitch,
-        team_success_90s::double as team_goal_difference_per_90_when_on_pitch,
+        team_success_90::double as team_goal_difference_per_90_when_on_pitch,
         team_success_on_off::double as team_goal_difference_when_on_pitch_minus_off_pitch
     from source       
 )

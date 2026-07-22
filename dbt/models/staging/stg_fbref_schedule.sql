@@ -10,7 +10,8 @@ with source as (
 
         league,
         season,
-        date::date as match_date,
+        -- date from the game string, not the tz-aware `date` column (avoids off-by-one)
+        split_part(game, ' ', 1)::date as match_date,
         cast(week as integer) as match_week,
         home_team,
         away_team,

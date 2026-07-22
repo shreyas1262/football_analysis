@@ -1,5 +1,5 @@
 with source as (
-    select * from {{ source('bronze', 'fbref_team_match_stats_keeper') }}
+    select * from {{ source('bronze', 'fbref_team_match_stats_shooting') }}
 ),
 
 renamed as (
@@ -18,14 +18,15 @@ renamed as (
         venue,
         result,
 
-        -- keeper stats
-        performance_sota::integer           as shots_on_target_against,
-        performance_ga::integer             as goals_against,
-        performance_saves::integer          as saves,
-        performance_cs::integer             as clean_sheets,
-        penalty_kicks_pkatt::integer        as penalties_faced,
-        penalty_kicks_pka::integer          as penalties_scored_against,
-        penalty_kicks_pksv::integer         as penalties_saved
+        -- shooting stats
+        standard_gls::integer               as goals,
+        standard_sh::integer                as shots,
+        standard_sot::integer               as shots_on_target,
+        standard_sot_1::float               as shots_on_target_pct,
+        standard_g_sh::float                as goals_per_shot,
+        standard_g_sot::float               as goals_per_shot_on_target,
+        standard_pk::integer                as penalty_goals,
+        standard_pkatt::integer             as penalties_attempted
 
     from source
     where league != 'nan'  -- league matches only; cup data is incomplete
