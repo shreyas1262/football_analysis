@@ -20,17 +20,17 @@ with source as (
         performance_ga90::double as goals_against_per_90,
         performance_sota::integer as shots_on_target_against,
         performance_saves::integer as saves,
-        performance_save::double as save_percentage,
+        performance_save::double as save_pct,
         performance_w::integer as wins,
         performance_d::integer as draws,
         performance_l::integer as losses,
         performance_cs::integer as clean_sheets,
-        performance_cs_1::double as clean_sheet_percentage,
+        performance_cs_1::double as clean_sheet_pct,
         penalty_kicks_pkatt::integer as penalties_faced,
-        penalty_kicks_pka::integer as penalties_scored_against,
+        penalty_kicks_pka::integer as penalties_allowed,
         penalty_kicks_pksv::integer as penalties_saved,
-        penalty_kicks_pkm::integer as penalties_missed_by_shooter,
-        penalty_kicks_save::double as penalty_kick_save_percentage
+        penalty_kicks_pkm::integer as penalties_missed,
+        penalty_kicks_save::double as penalty_save_pct
     from source
 )
 

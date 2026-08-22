@@ -31,7 +31,10 @@ renamed as (
         attendance::integer             as attendance,
         referee
     from source
-    where league != 'nan'  -- league matches only; cup data is incomplete
+    -- league matches only: gate on schedule membership, NOT the `league` column
+    -- (bronze `league` is unreliably 'nan' even for real league games).
+    where regexp_extract(match_report, '/en/matches/([a-f0-9]+)/', 1)
+          in (select match_id from {{ ref('stg_fbref_schedule') }})
 )
 
 select * from renamed

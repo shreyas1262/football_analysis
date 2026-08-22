@@ -20,14 +20,14 @@ with source as (
         playing_time_mp::integer     as matches_played,
         playing_time_starts::integer as matches_started,
         playing_time_min::integer    as minutes_played,
-        playing_time_90s::integer    as minutes_played_per_90,
+        playing_time_90s::integer    as minutes_90s,
 
         -- goals and assists
         performance_gls::integer     as goals,
         performance_ast::integer     as assists,
         performance_g_pk::integer    as non_penalty_goals,
         performance_pk::integer      as penalty_goals,
-        performance_pkatt::integer   as penalty_attempts,
+        performance_pkatt::integer   as penalties_attempted,
         performance_crdy::integer    as yellow_cards,
         performance_crdr::integer    as red_cards,
 

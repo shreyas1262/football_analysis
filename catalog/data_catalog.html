@@ -1,0 +1,607 @@
+<style>
+:root{
+  --ground:#f3f6f2; --surface:#ffffff; --surface-2:#eaf0ea; --raise:#ffffff;
+  --ink:#15211b; --ink-2:#3f4f47; --ink-3:#6b7c72; --line:#dbe4dd; --line-2:#c9d5cc;
+  --accent:#0f7a43; --accent-ink:#0a5c32;
+  --fam-dim:#3268a6; --fam-match-anchor:#0f7a43; --fam-player:#a8720c;
+  --fam-team-season:#6a52c9; --fam-team-match:#0d8a80;
+  --pk:#0f7a43; --fk:#a8720c;
+  --shadow:0 1px 2px rgba(20,40,30,.06),0 6px 20px rgba(20,40,30,.06);
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0c1310; --surface:#121c17; --surface-2:#182420; --raise:#16221c;
+  --ink:#e9f1eb; --ink-2:#a7b8ad; --ink-3:#7a8c82; --line:#24322b; --line-2:#2f3f37;
+  --accent:#37c07b; --accent-ink:#8fe3b6;
+  --fam-dim:#6fa3dc; --fam-match-anchor:#37c07b; --fam-player:#dca63f;
+  --fam-team-season:#a493f0; --fam-team-match:#3fc3b8;
+  --pk:#37c07b; --fk:#dca63f;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.28);
+}}
+:root[data-theme="dark"]{
+  --ground:#0c1310; --surface:#121c17; --surface-2:#182420; --raise:#16221c;
+  --ink:#e9f1eb; --ink-2:#a7b8ad; --ink-3:#7a8c82; --line:#24322b; --line-2:#2f3f37;
+  --accent:#37c07b; --accent-ink:#8fe3b6;
+  --fam-dim:#6fa3dc; --fam-match-anchor:#37c07b; --fam-player:#dca63f;
+  --fam-team-season:#a493f0; --fam-team-match:#3fc3b8;
+  --pk:#37c07b; --fk:#dca63f;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.28);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+  line-height:1.55;font-size:16px;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px 96px;}
+a{color:var(--accent-ink)}
+
+/* header */
+.masthead{padding:56px 0 28px;border-bottom:1px solid var(--line);}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--accent-ink);margin:0 0 14px;display:flex;align-items:center;gap:10px;}
+.eyebrow::before{content:"";width:22px;height:2px;background:var(--accent);border-radius:2px;}
+h1{font-size:clamp(30px,5vw,46px);line-height:1.04;letter-spacing:-.02em;margin:0 0 12px;
+  font-weight:680;text-wrap:balance;}
+.lede{font-size:18px;color:var(--ink-2);max-width:62ch;margin:0;}
+.stats{display:flex;flex-wrap:wrap;gap:10px 12px;margin-top:26px;}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:12px 16px;
+  box-shadow:var(--shadow);min-width:104px;}
+.stat b{display:block;font-size:24px;font-weight:680;letter-spacing:-.01em;
+  font-variant-numeric:tabular-nums;line-height:1.1;}
+.stat span{font-size:12px;color:var(--ink-3);font-family:var(--mono);letter-spacing:.04em;
+  text-transform:uppercase;}
+
+/* section shell */
+h2.block{font-size:13px;font-family:var(--mono);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-3);margin:56px 0 18px;font-weight:600;}
+
+/* diagram */
+figure.diagram{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;
+  padding:26px 24px 18px;box-shadow:var(--shadow);overflow:hidden;}
+.diagram svg{display:block;width:100%;height:auto;color:var(--ink-2);}
+.diagram figcaption{margin-top:14px;font-size:13.5px;color:var(--ink-2);max-width:80ch;}
+.diagram figcaption b{color:var(--ink);font-weight:620;}
+.d-node{fill:var(--surface-2);stroke:var(--line-2);stroke-width:1.2;}
+.d-lbl{fill:var(--ink);font-family:var(--mono);font-size:12.5px;}
+.d-sub{fill:var(--ink-3);font-family:var(--mono);font-size:10.5px;}
+.d-thread{fill:none;stroke-width:2.2;}
+.d-keytag{font-family:var(--mono);font-size:10.5px;font-weight:600;}
+.t-green{stroke:var(--fam-match-anchor)} .f-green{fill:var(--fam-match-anchor)}
+.t-teal{stroke:var(--fam-team-match)}   .box-teal{stroke:var(--fam-team-match);fill:var(--surface-2)}
+.t-amber{stroke:var(--fam-player)}      .box-amber{stroke:var(--fam-player);fill:var(--surface-2)}
+.t-violet{stroke:var(--fam-team-season)} .box-violet{stroke:var(--fam-team-season);fill:var(--surface-2)}
+.pill-green{fill:var(--fam-match-anchor)} .pill-amber{fill:var(--fam-player)} .pill-violet{fill:var(--fam-team-season)}
+.pill-lbl{fill:#fff;font-family:var(--mono);font-size:12.5px;font-weight:600;}
+.pill-sub{fill:rgba(255,255,255,.82);font-family:var(--mono);font-size:10px;}
+
+/* legend */
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin:16px 2px 0;font-size:12.5px;color:var(--ink-2);}
+.legend span{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);}
+.swatch{width:11px;height:11px;border-radius:3px;display:inline-block;}
+.kbadge{font-family:var(--mono);font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;
+  letter-spacing:.03em;}
+.kbadge.pk{color:#fff;background:var(--pk)} .kbadge.fk{color:#fff;background:var(--fk)}
+
+/* family sections */
+.fam-section{margin-top:12px;}
+.fam-head{display:flex;align-items:baseline;gap:14px;margin:38px 0 16px;padding-bottom:10px;
+  border-bottom:1px solid var(--line);}
+.fam-head h2{font-size:19px;margin:0;letter-spacing:-.01em;font-weight:660;}
+.fam-count{font-family:var(--mono);font-size:12px;color:var(--ink-3);letter-spacing:.03em;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;}
+
+/* card */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 16px 6px;
+  box-shadow:var(--shadow);border-top:3px solid var(--fam);position:relative;display:flex;flex-direction:column;}
+.fam-dim{--fam:var(--fam-dim)} .fam-match-anchor{--fam:var(--fam-match-anchor)}
+.fam-player{--fam:var(--fam-player)} .fam-team-season{--fam:var(--fam-team-season)}
+.fam-team-match{--fam:var(--fam-team-match)}
+.card-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.card-title{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+.fam-dot{width:9px;height:9px;border-radius:50%;background:var(--fam);flex:none;}
+.card-title h3{margin:0;font-size:17px;font-weight:660;letter-spacing:-.01em;}
+.model-id{font-family:var(--mono);font-size:11px;color:var(--ink-3);}
+.rowcount{font-family:var(--mono);font-weight:680;font-size:17px;text-align:right;line-height:1;
+  font-variant-numeric:tabular-nums;flex:none;}
+.rowcount small{display:block;font-size:9.5px;font-weight:500;color:var(--ink-3);letter-spacing:.08em;
+  text-transform:uppercase;margin-top:3px;}
+.card-meta{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 2px;}
+.tag{font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:6px;background:var(--surface-2);
+  color:var(--ink-2);border:1px solid var(--line);}
+.tag.grain{color:var(--ink)}
+.tag.pk{color:var(--pk);border-color:color-mix(in srgb,var(--pk) 32%,var(--line))}
+.tag.fk{color:var(--fk);border-color:color-mix(in srgb,var(--fk) 32%,var(--line))}
+.note{font-size:13px;color:var(--ink-2);margin:10px 0 2px;}
+.cols{list-style:none;margin:12px 0 10px;padding:12px 0 0;border-top:1px dashed var(--line-2);
+  display:flex;flex-direction:column;gap:1px;}
+.col{display:flex;align-items:center;gap:8px;padding:3px 4px;border-radius:5px;}
+.col code{font-family:var(--mono);font-size:12.5px;color:var(--ink);}
+.col .ctype{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);margin-left:auto;
+  padding:1px 6px;background:var(--surface-2);border-radius:4px;letter-spacing:.02em;}
+.krole{font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;color:#fff;}
+.krole.pk{background:var(--pk)} .krole.fk{background:var(--fk)}
+.col--pk code,.col--fk code{font-weight:640;}
+.col--pk .ctype{order:2} .col--fk .ctype{order:2}
+
+/* callouts */
+.callouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;}
+.callout{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);}
+.callout.warn{border-left-color:var(--fk)}
+.callout h3{margin:0 0 8px;font-size:15px;font-weight:640;display:flex;align-items:center;gap:8px;}
+.callout p{margin:0 0 8px;font-size:13.5px;color:var(--ink-2);}
+.callout p:last-child{margin-bottom:0}
+.callout code{font-family:var(--mono);font-size:12px;background:var(--surface-2);padding:1px 5px;
+  border-radius:4px;color:var(--ink);}
+.tick{color:var(--accent-ink)} .flag{color:var(--fk)}
+
+/* naming table */
+.nametbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);
+  box-shadow:var(--shadow);}
+table.nametbl{border-collapse:collapse;width:100%;min-width:560px;font-size:13px;}
+.nametbl th,.nametbl td{text-align:left;padding:11px 16px;border-bottom:1px solid var(--line);}
+.nametbl th{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:600;background:var(--surface-2);}
+.nametbl tr:last-child td{border-bottom:none}
+.nametbl code{font-family:var(--mono);font-size:12px;color:var(--ink);}
+.nametbl .c1{color:var(--fam-player)} .nametbl .c2{color:var(--fam-team-season)}
+footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--line);font-family:var(--mono);
+  font-size:12px;color:var(--ink-3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+</style>
+<div class="wrap">
+  <header class="masthead">
+    <p class="eyebrow">Football Analytics &middot; Silver Layer</p>
+    <h1>FBref Data Catalog</h1>
+    <p class="lede">Every cleaned model in the DuckDB silver layer &mdash; grain, keys, columns and row
+    counts &mdash; built from Delta bronze via dbt. The map to build gold from.</p>
+    <div class="stats">
+      <div class="stat"><b>16</b><span>models</span></div>
+      <div class="stat"><b>28,555</b><span>rows</span></div>
+      <div class="stat"><b>5</b><span>Big-5 leagues</span></div>
+      <div class="stat"><b>2024&ndash;25</b><span>season</span></div>
+      <div class="stat"><b>3</b><span>join keys</span></div>
+    </div>
+  </header>
+  
+<h2 class="block">How it joins</h2>
+<figure class="diagram">
+  <svg viewBox="0 0 924 470" role="img" aria-label="The silver layer is three table-families joined by three keys, all anchored to the league schedule.">
+  <text class="d-keytag f-green" x="148" y="18" text-anchor="middle">match_id (FK → schedule)</text>
+  <line class="d-thread t-green" x1="148" y1="62" x2="148" y2="301"/>
+<rect class="pill-green" x="36.0" y="28" width="224" height="34" rx="8"/>
+<text class="pill-lbl" x="148" y="43" text-anchor="middle">stg_fbref_schedule</text>
+<text class="pill-sub" x="148" y="56" text-anchor="middle">anchor · PK match_id</text>
+<rect class="d-node box-teal" x="36.0" y="92" width="224" height="46" rx="7"/>
+<text class="d-lbl" x="148" y="113" text-anchor="middle">match · schedule</text>
+<text class="d-sub" x="148" y="128" text-anchor="middle">team_match_id · tactics</text>
+<rect class="d-node box-teal" x="36.0" y="154" width="224" height="46" rx="7"/>
+<text class="d-lbl" x="148" y="175" text-anchor="middle">match · shooting</text>
+<text class="d-sub" x="148" y="190" text-anchor="middle">team_match_id</text>
+<rect class="d-node box-teal" x="36.0" y="216" width="224" height="46" rx="7"/>
+<text class="d-lbl" x="148" y="237" text-anchor="middle">match · keeper</text>
+<text class="d-sub" x="148" y="252" text-anchor="middle">team_match_id</text>
+<rect class="d-node box-teal" x="36.0" y="278" width="224" height="46" rx="7"/>
+<text class="d-lbl" x="148" y="299" text-anchor="middle">match · misc</text>
+<text class="d-sub" x="148" y="314" text-anchor="middle">team_match_id</text>
+  <line class="d-thread t-amber" x1="462" y1="62" x2="462" y2="363"/>
+<rect class="pill-amber" x="350.0" y="28" width="224" height="34" rx="8"/>
+<text class="pill-lbl" x="462" y="43" text-anchor="middle">player_id</text>
+<text class="pill-sub" x="462" y="56" text-anchor="middle">surrogate: player+born+nation</text>
+<rect class="d-node box-amber" x="350.0" y="92" width="224" height="46" rx="7"/>
+<text class="d-lbl" x="462" y="113" text-anchor="middle">player · standard</text>
+<text class="d-sub" x="462" y="128" text-anchor="middle">goals, assists, cards</text>
+<rect class="d-node box-amber" x="350.0" y="154" width="224" height="46" rx="7"/>
+<text class="d-lbl" x="462" y="175" text-anchor="middle">player · shooting</text>
+<text class="d-sub" x="462" y="190" text-anchor="middle">shots, xG-style rates</text>
+<rect class="d-node box-amber" x="350.0" y="216" width="224" height="46" rx="7"/>
+<text class="d-lbl" x="462" y="237" text-anchor="middle">player · keeper</text>
+<text class="d-sub" x="462" y="252" text-anchor="middle">GK only — 212 rows</text>
+<rect class="d-node box-amber" x="350.0" y="278" width="224" height="46" rx="7"/>
+<text class="d-lbl" x="462" y="299" text-anchor="middle">player · playing_time</text>
+<text class="d-sub" x="462" y="314" text-anchor="middle">minutes, subs, on-pitch</text>
+<rect class="d-node box-amber" x="350.0" y="340" width="224" height="46" rx="7"/>
+<text class="d-lbl" x="462" y="361" text-anchor="middle">player · misc</text>
+<text class="d-sub" x="462" y="376" text-anchor="middle">fouls, tackles, offsides</text>
+  <line class="d-thread t-violet" x1="776" y1="62" x2="776" y2="363"/>
+<rect class="pill-violet" x="664.0" y="28" width="224" height="34" rx="8"/>
+<text class="pill-lbl" x="776" y="43" text-anchor="middle">team_id + season</text>
+<text class="pill-sub" x="776" y="56" text-anchor="middle">composite PK</text>
+<rect class="d-node box-violet" x="664.0" y="92" width="224" height="46" rx="7"/>
+<text class="d-lbl" x="776" y="113" text-anchor="middle">team · standard</text>
+<text class="d-sub" x="776" y="128" text-anchor="middle">goals, poss, per-90</text>
+<rect class="d-node box-violet" x="664.0" y="154" width="224" height="46" rx="7"/>
+<text class="d-lbl" x="776" y="175" text-anchor="middle">team · shooting</text>
+<text class="d-sub" x="776" y="190" text-anchor="middle">shots, conversion</text>
+<rect class="d-node box-violet" x="664.0" y="216" width="224" height="46" rx="7"/>
+<text class="d-lbl" x="776" y="237" text-anchor="middle">team · keeper</text>
+<text class="d-sub" x="776" y="252" text-anchor="middle">GK aggregates</text>
+<rect class="d-node box-violet" x="664.0" y="278" width="224" height="46" rx="7"/>
+<text class="d-lbl" x="776" y="299" text-anchor="middle">team · playing_time</text>
+<text class="d-sub" x="776" y="314" text-anchor="middle">squad usage, PPM</text>
+<rect class="d-node box-violet" x="664.0" y="340" width="224" height="46" rx="7"/>
+<text class="d-lbl" x="776" y="361" text-anchor="middle">team · misc</text>
+<text class="d-sub" x="776" y="376" text-anchor="middle">fouls, tackles, offsides</text>
+</svg>
+  <figcaption><b>Three families, three keys.</b> Match-grain tables share <code>match_id</code> and
+  all trace back to <code>stg_fbref_schedule</code> (the authoritative league fixture list). Player tables
+  join on the <code>player_id</code> surrogate; team-season tables on the <code>(team_id, season)</code>
+  composite. Join within a family on its key; bridge match↔season grains through schedule.</figcaption>
+</figure>
+
+<div class="legend">
+  <span><i class="swatch" style="background:var(--fam-match-anchor)"></i>Schedule (anchor)</span>
+  <span><i class="swatch" style="background:var(--fam-team-match)"></i>Team-Match</span>
+  <span><i class="swatch" style="background:var(--fam-player)"></i>Player-Season</span>
+  <span><i class="swatch" style="background:var(--fam-team-season)"></i>Team-Season</span>
+  <span><i class="swatch" style="background:var(--fam-dim)"></i>Dimension</span>
+  <span><i class="kbadge pk">PK</i>primary key</span>
+  <span><i class="kbadge fk">FK</i>foreign key</span>
+</div>
+  <h2 class="block">The models</h2>
+  
+    <section class="fam-section" data-fam="dim">
+      <div class="fam-head">
+        <h2>Dimension</h2>
+        <span class="fam-count">1 model · 5 rows</span>
+      </div>
+      <div class="grid">
+    <article class="card fam-dim">
+      <header class="card-h">
+        <div class="card-title">
+          <span class="fam-dot"></span>
+          <h3>seasons</h3>
+          <span class="model-id">stg_fbref_seasons</span>
+        </div>
+        <span class="rowcount">5<small>rows</small></span>
+      </header>
+      <div class="card-meta">
+        <span class="tag grain">one row per league-season</span>
+        <span class="tag pk">PK&nbsp;league + season</span>
+        
+      </div>
+      <p class="note">Dimension: which league-seasons exist.</p>
+      <ul class="cols"><li class="col col--pk"><code>league</code><span class="ctype">str</span><span class="krole pk">PK</span></li><li class="col col--pk"><code>season</code><span class="ctype">str</span><span class="krole pk">PK</span></li></ul>
+    </article></div>
+    </section>
+
+    <section class="fam-section" data-fam="match-anchor">
+      <div class="fam-head">
+        <h2>Schedule</h2>
+        <span class="fam-count">1 model · 1,756 rows</span>
+      </div>
+      <div class="grid">
+    <article class="card fam-match-anchor">
+      <header class="card-h">
+        <div class="card-title">
+          <span class="fam-dot"></span>
+          <h3>schedule</h3>
+          <span class="model-id">stg_fbref_schedule</span>
+        </div>
+        <span class="rowcount">1,756<small>rows</small></span>
+      </header>
+      <div class="card-meta">
+        <span class="tag grain">one row per match</span>
+        <span class="tag pk">PK&nbsp;match_id</span>
+        
+      </div>
+      <p class="note">The league fixture list — anchor for all match-grain tables.</p>
+      <ul class="cols"><li class="col col--pk"><code>match_id</code><span class="ctype">str</span><span class="krole pk">PK</span></li><li class="col"><code>league</code><span class="ctype">str</span></li><li class="col"><code>season</code><span class="ctype">str</span></li><li class="col"><code>match_date</code><span class="ctype">date</span></li><li class="col"><code>match_week</code><span class="ctype">int</span></li><li class="col"><code>home_team</code><span class="ctype">str</span></li><li class="col"><code>away_team</code><span class="ctype">str</span></li><li class="col"><code>score</code><span class="ctype">str</span></li><li class="col"><code>home_score</code><span class="ctype">int</span></li><li class="col"><code>away_score</code><span class="ctype">int</span></li><li class="col"><code>is_complete</code><span class="ctype">bool</span></li><li class="col"><code>attendance</code><span class="ctype">int</span></li><li class="col"><code>venue</code><span class="ctype">str</span></li><li class="col"><code>referee</code><span class="ctype">str</span></li></ul>
+    </article></div>
+    </section>
+
+    <section class="fam-section" data-fam="player">
+      <div class="fam-head">
+        <h2>Player-Season</h2>
+        <span class="fam-count">5 models · 12,282 rows</span>
+      </div>
+      <div class="grid">
+    <article class="card fam-player">
+      <header class="card-h">
+        <div class="card-title">
+          <span class="fam-dot"></span>
+          <h3>standard</h3>
+          <span class="model-id">stg_fbref_player_season_stats_standard</span>
+        </div>
+        <span class="rowcount">2,854<small>rows</small></span>
+      </header>
+      <div class="card-meta">
+        <span class="tag grain">player · team · season</span>
+        <span class="tag pk">PK&nbsp;player_id</span>
+        
+      </div>
+      
+      <ul class="cols"><li class="col col--pk"><code>player_id</code><span class="ctype">str</span><span class="krole pk">PK</span></li><li class="col"><code>league</code><span class="ctype">str</span></li><li class="col"><code>season</code><span class="ctype">str</span></li><li class="col"><code>team</code><span class="ctype">str</span></li><li class="col"><code>name</code><span class="ctype">str</span></li><li class="col"><code>nation</code><span class="ctype">str</span></li><li class="col"><code>position</code><span class="ctype">str</span></li><li class="col"><code>age</code><span class="ctype">int</span></li><li class="col"><code>born</code><span class="ctype">int</span></li><li class="col"><code>matches_played</code><span class="ctype">int</span></li><li class="col"><code>matches_started</code><span class="ctype">int</span></li><li class="col"><code>minutes_played</code><span class="ctype">int</span></li><li class="col"><code>minutes_90s</code><span class="ctype">int</span></li><li class="col"><code>goals</code><span class="ctype">int</span></li><li class="col"><code>assists</code><span class="ctype">int</span></li><li class="col"><code>non_penalty_goals</code><span class="ctype">int</span></li><li class="col"><code>penalty_goals</code><span class="ctype">int</span></li><li class="col"><code>penalties_attempted</code><span class="ctype">int</span></li><li class="col"><code>yellow_cards</code><span class="ctype">int</span></li><li class="col"><code>red_cards</code><span class="ctype">int</span></li><li class="col"><code>goals_per_90</code><span class="ctype">num</span></li><li class="col"><code>assists_per_90</code><span class="ctype">num</span></li><li class="col"><code>goals_and_assists_per_90</code><span class="ctype">num</span></li><li class="col"><code>non_penalty_goals_per_90</code><span class="ctype">num</span></li><li class="col"><code>non_penalty_goals_and_assists_per_90</code><span class="ctype">num</span></li></ul>
+    </article>
+
+    <article class="card fam-player">
+      <header class="card-h">
+        <div class="card-title">
+          <span class="fam-dot"></span>
+          <h3>shooting</h3>
+          <span class="model-id">stg_fbref_player_season_stats_shooting</span>
+        </div>
+        <span class="rowcount">2,854<small>rows</small></span>
+      </header>
+      <div class="card-meta">
+        <span class="tag grain">player · team · season</span>
+        <span class="tag pk">PK&nbsp;player_id</span>
+        
+      </div>
+      
+      <ul class="cols"><li class="col col--pk"><code>player_id</code><span class="ctype">str</span><span class="krole pk">PK</span></li><li class="col"><code>league</code><span class="ctype">str</span></li><li class="col"><code>season</code><span class="ctype">str</span></li><li class="col"><code>team</code><span class="ctype">str</span></li><li class="col"><code>name</code><span class="ctype">str</span></li><li class="col"><code>nation</code><span class="ctype">str</span></li><li class="col"><code>position</code><span class="ctype">str</span></li><li class="col"><code>age</code><span class="ctype">int</span></li><li class="col"><code>born</code><span class="ctype">int</span></li><li class="col"><code>minutes_90s</code><span class="ctype">num</span></li><li class="col"><code>goals</code><span class="ctype">int</span></li><li class="col"><code>shots</code><span class="ctype">int</span></li><li class="col"><code>shots_on_target</code><span class="ctype">int</span></li><li class="col"><code>shots_on_target_pct</code><span class="ctype">num</span></li><li class="col"><code>shots_per_90</code><span class="ctype">num</span></li><li class="col"><code>shots_on_target_per_90</code><span class="ctype">num</span></li><li class="col"><code>goals_per_shot</code><span class="ctype">num</span></li><li class="col"><code>goals_per_shot_on_target</code><span class="ctype">num</span></li></ul>
+    </article>
+
+    <article class="card fam-player">
+      <header class="card-h">
+        <div class="card-title">
+          <span class="fam-dot"></span>
+          <h3>keeper</h3>
+          <span class="model-id">stg_fbref_player_season_stats_keeper</span>
+        </div>
+        <span class="rowcount">212<small>rows</small></span>
+      </header>
+      <div class="card-meta">
+        <span class="tag grain">player · team · season</span>
+        <span class="tag pk">PK&nbsp;player_id</span>
+        
+      </div>
+      <p class="note">Goalkeepers only.</p>
+      <ul class="cols"><li class="col col--pk"><code>player_id</code><span class="ctype">str</span><span class="krole pk">PK</span></li><li class="col"><code>league</code><span class="ctype">str</span></li><li class="col"><code>season</code><span class="ctype">str</span></li><li class="col"><code>team</code><span class="ctype">str</span></li><li class="col"><code>name</code><span class="ctype">str</span></li><li class="col"><code>nation</code><span class="ctype">str</span></li><li class="col"><code>position</code><span class="ctype">str</span></li><li class="col"><code>age</code><span class="ctype">int</span></li><li class="col"><code>born</code><span class="ctype">int</span></li><li class="col"><code>goals_against</code><span class="ctype">int</span></li><li class="col"><code>goals_against_per_90</code><span class="ctype">num</span></li><li class="col"><code>shots_on_target_against</code><span class="ctype">int</span></li><li class="col"><code>saves</code><span class="ctype">int</span></li><li class="col"><code>save_pct</code><span class="ctype">num</span></li><li class="col"><code>wins</code><span class="ctype">int</span></li><li class="col"><code>draws</code><span class="ctype">int</span></li><li class="col"><code>losses</code><span class="ctype">int</span></li><li class="col"><code>clean_sheets</code><span class="ctype">int</span></li><li class="col"><code>clean_sheet_pct</code><span class="ctype">num</span></li><li class="col"><code>penalties_faced</code><span class="ctype">int</span></li><li class="col"><code>penalties_allowed</code><span class="ctype">int</span></li><li class="col"><code>penalties_saved</code><span class="ctype">int</span></li><li class="col"><code>penalties_missed</code><span class="ctype">int</span></li><li class="col"><code>penalty_save_pct</code><span class="ctype">num</span></li></ul>
+    </article>
+
+    <article class="card fam-player">
+      <header class="card-h">
+        <div class="card-title">
+          <span class="fam-dot"></span>
+          <h3>playing_time</h3>
+          <span class="model-id">stg_fbref_player_season_stats_playing_time</span>
+        </div>
+        <span class="rowcount">3,508<small>rows</small></span>
+      </header>
+      <div class="card-meta">
+        <span class="tag grain">player · team · season</span>
+        <span class="tag pk">PK&nbsp;player_id</span>
+        
+      </div>
+      
+      <ul class="cols"><li class="col col--pk"><code>player_id</code><span class="ctype">str</span><span class="krole pk">PK</span></li><li class="col"><code>league</code><span class="ctype">str</span></li><li class="col"><code>season</code><span class="ctype">str</span></li><li class="col"><code>team</code><span class="ctype">str</span></li><li class="col"><code>name</code><span class="ctype">str</span></li><li class="col"><code>nation</code><span class="ctype">str</span></li><li class="col"><code>position</code><span class="ctype">str</span></li><li class="col"><code>age</code><span class="ctype">int</span></li><li class="col"><code>born</code><span class="ctype">int</span></li><li class="col"><code>matches_played</code><span class="ctype">int</span></li><li class="col"><code>minutes_played</code><span class="ctype">int</span></li><li class="col"><code>minutes_per_match</code><span class="ctype">num</span></li><li class="col"><code>minutes_played_pct</code><span class="ctype">num</span></li><li class="col"><code>matches_started</code><span class="ctype">int</span></li><li class="col"><code>minutes_played_when_started</code><span class="ctype">int</span></li><li class="col"><code>starts_completed</code><span class="ctype">int</span></li><li class="col"><code>matches_subbed_in</code><span class="ctype">int</span></li><li class="col"><code>minutes_played_when_subbed_in</code><span class="ctype">int</span></li><li class="col"><code>unused_substitute</code><span class="ctype">int</span></li><li class="col"><code>team_points_per_match_when_playing</code><span class="ctype">num</span></li><li class="col"><code>team_goals_scored_when_on_pitch</code><span class="ctype">num</span></li><li class="col"><code>team_goals_conceded_when_on_pitch</code><span class="ctype">num</span></li><li class="col"><code>team_goal_difference_when_on_pitch</code><span class="ctype">num</span></li><li class="col"><code>team_goal_difference_per_90_when_on_pitch</code><span class="ctype">num</span></li><li class="col"><code>team_goal_difference_when_on_pitch_minus_off_pitch</code><span class="ctype">num</span></li></ul>
+    </article>
+
+    <article class="card fam-player">
+      <header class="card-h">
+        <div class="card-title">
+          <span class="fam-dot"></span>
+          <h3>misc</h3>
+          <span class="model-id">stg_fbref_player_season_stats_misc</span>
+        </div>
+        <span class="rowcount">2,854<small>rows</small></span>
+      </header>
+      <div class="card-meta">
+        <span class="tag grain">player · team · season</span>
+        <span class="tag pk">PK&nbsp;player_id</span>
+        
+      </div>
+      
+      <ul class="cols"><li class="col col--pk"><code>player_id</code><span class="ctype">str</span><span class="krole pk">PK</span></li><li class="col"><code>league</code><span class="ctype">str</span></li><li class="col"><code>season</code><span class="ctype">str</span></li><li class="col"><code>team</code><span class="ctype">str</span></li><li class="col"><code>name</code><span class="ctype">str</span></li><li class="col"><code>nation</code><span class="ctype">str</span></li><li class="col"><code>position</code><span class="ctype">str</span></li><li class="col"><code>age</code><span class="ctype">int</span></li><li class="col"><code>born</code><span class="ctype">int</span></li><li class="col"><code>second_yellow_card</code><span class="ctype">int</span></li><li class="col"><code>fouls_committed</code><span class="ctype">int</span></li><li class="col"><code>fouls_drawn</code><span class="ctype">int</span></li><li class="col"><code>offsides</code><span class="ctype">int</span></li><li class="col"><code>crosses_attempted</code><span class="ctype">int</span></li><li class="col"><code>interceptions</code><span class="ctype">int</span></li><li class="col"><code>tackles_won</code><span class="ctype">int</span></li><li class="col"><code>penalties_won</code><span class="ctype">int</span></li><li class="col"><code>penalties_conceded</code><span class="ctype">int</span></li><li class="col"><code>own_goals</code><span class="ctype">int</span></li></ul>
+    </article></div>
+    </section>
+
+    <section class="fam-section" data-fam="team-season">
+      <div class="fam-head">
+        <h2>Team-Season</h2>
+        <span class="fam-count">5 models · 480 rows</span>
+      </div>
+      <div class="grid">
+    <article class="card fam-team-season">
+      <header class="card-h">
+        <div class="card-title">
+          <span class="fam-dot"></span>
+          <h3>standard</h3>
+          <span class="model-id">stg_fbref_team_season_stats_standard</span>
+        </div>
+        <span class="rowcount">96<small>rows</small></span>
+      </header>
+      <div class="card-meta">
+        <span class="tag grain">team · season</span>
+        <span class="tag pk">PK&nbsp;team_id + season</span>
+        
+      </div>
+      
+      <ul class="cols"><li class="col col--pk"><code>team_id</code><span class="ctype">str</span><span class="krole pk">PK</span></li><li class="col col--pk"><code>season</code><span class="ctype">str</span><span class="krole pk">PK</span></li><li class="col"><code>league</code><span class="ctype">str</span></li><li class="col"><code>team</code><span class="ctype">str</span></li><li class="col"><code>players_used</code><span class="ctype">int</span></li><li class="col"><code>avg_age</code><span class="ctype">num</span></li><li class="col"><code>possession_pct</code><span class="ctype">num</span></li><li class="col"><code>matches_played</code><span class="ctype">int</span></li><li class="col"><code>starts</code><span class="ctype">int</span></li><li class="col"><code>minutes</code><span class="ctype">int</span></li><li class="col"><code>minutes_90s</code><span class="ctype">int</span></li><li class="col"><code>goals</code><span class="ctype">int</span></li><li class="col"><code>assists</code><span class="ctype">int</span></li><li class="col"><code>non_penalty_goals</code><span class="ctype">int</span></li><li class="col"><code>penalty_goals</code><span class="ctype">int</span></li><li class="col"><code>penalties_attempted</code><span class="ctype">int</span></li><li class="col"><code>yellow_cards</code><span class="ctype">int</span></li><li class="col"><code>red_cards</code><span class="ctype">int</span></li><li class="col"><code>goals_per_90</code><span class="ctype">num</span></li><li class="col"><code>assists_per_90</code><span class="ctype">num</span></li><li class="col"><code>goals_and_assists_per_90</code><span class="ctype">num</span></li><li class="col"><code>non_penalty_goals_per_90</code><span class="ctype">num</span></li><li class="col"><code>non_penalty_goals_and_assists_per_90</code><span class="ctype">num</span></li></ul>
+    </article>
+
+    <article class="card fam-team-season">
+      <header class="card-h">
+        <div class="card-title">
+          <span class="fam-dot"></span>
+          <h3>shooting</h3>
+          <span class="model-id">stg_fbref_team_season_stats_shooting</span>
+        </div>
+        <span class="rowcount">96<small>rows</small></span>
+      </header>
+      <div class="card-meta">
+        <span class="tag grain">team · season</span>
+        <span class="tag pk">PK&nbsp;team_id + season</span>
+        
+      </div>
+      
+      <ul class="cols"><li class="col col--pk"><code>team_id</code><span class="ctype">str</span><span class="krole pk">PK</span></li><li class="col col--pk"><code>season</code><span class="ctype">str</span><span class="krole pk">PK</span></li><li class="col"><code>league</code><span class="ctype">str</span></li><li class="col"><code>team</code><span class="ctype">str</span></li><li class="col"><code>players_used</code><span class="ctype">int</span></li><li class="col"><code>minutes_90s</code><span class="ctype">int</span></li><li class="col"><code>goals</code><span class="ctype">int</span></li><li class="col"><code>shots</code><span class="ctype">int</span></li><li class="col"><code>shots_on_target</code><span class="ctype">int</span></li><li class="col"><code>shots_on_target_pct</code><span class="ctype">num</span></li><li class="col"><code>shots_per_90</code><span class="ctype">num</span></li><li class="col"><code>shots_on_target_per_90</code><span class="ctype">num</span></li><li class="col"><code>goals_per_shot</code><span class="ctype">num</span></li><li class="col"><code>goals_per_shot_on_target</code><span class="ctype">num</span></li><li class="col"><code>penalty_goals</code><span class="ctype">int</span></li><li class="col"><code>penalties_attempted</code><span class="ctype">int</span></li></ul>
+    </article>
+
+    <article class="card fam-team-season">
+      <header class="card-h">
+        <div class="card-title">
+          <span class="fam-dot"></span>
+          <h3>keeper</h3>
+          <span class="model-id">stg_fbref_team_season_stats_keeper</span>
+        </div>
+        <span class="rowcount">96<small>rows</small></span>
+      </header>
+      <div class="card-meta">
+        <span class="tag grain">team · season</span>
+        <span class="tag pk">PK&nbsp;team_id + season</span>
+        
+      </div>
+      
+      <ul class="cols"><li class="col col--pk"><code>team_id</code><span class="ctype">str</span><span class="krole pk">PK</span></li><li class="col col--pk"><code>season</code><span class="ctype">str</span><span class="krole pk">PK</span></li><li class="col"><code>league</code><span class="ctype">str</span></li><li class="col"><code>team</code><span class="ctype">str</span></li><li class="col"><code>keepers_used</code><span class="ctype">int</span></li><li class="col"><code>matches_played</code><span class="ctype">int</span></li><li class="col"><code>starts</code><span class="ctype">int</span></li><li class="col"><code>minutes</code><span class="ctype">int</span></li><li class="col"><code>minutes_90s</code><span class="ctype">int</span></li><li class="col"><code>goals_against</code><span class="ctype">int</span></li><li class="col"><code>goals_against_per_90</code><span class="ctype">num</span></li><li class="col"><code>shots_on_target_against</code><span class="ctype">int</span></li><li class="col"><code>saves</code><span class="ctype">int</span></li><li class="col"><code>save_pct</code><span class="ctype">num</span></li><li class="col"><code>wins</code><span class="ctype">int</span></li><li class="col"><code>draws</code><span class="ctype">int</span></li><li class="col"><code>losses</code><span class="ctype">int</span></li><li class="col"><code>clean_sheets</code><span class="ctype">int</span></li><li class="col"><code>clean_sheet_pct</code><span class="ctype">num</span></li><li class="col"><code>penalties_faced</code><span class="ctype">int</span></li><li class="col"><code>penalties_allowed</code><span class="ctype">int</span></li><li class="col"><code>penalties_saved</code><span class="ctype">int</span></li><li class="col"><code>penalties_missed</code><span class="ctype">int</span></li><li class="col"><code>penalty_save_pct</code><span class="ctype">num</span></li></ul>
+    </article>
+
+    <article class="card fam-team-season">
+      <header class="card-h">
+        <div class="card-title">
+          <span class="fam-dot"></span>
+          <h3>playing_time</h3>
+          <span class="model-id">stg_fbref_team_season_stats_playing_time</span>
+        </div>
+        <span class="rowcount">96<small>rows</small></span>
+      </header>
+      <div class="card-meta">
+        <span class="tag grain">team · season</span>
+        <span class="tag pk">PK&nbsp;team_id + season</span>
+        
+      </div>
+      
+      <ul class="cols"><li class="col col--pk"><code>team_id</code><span class="ctype">str</span><span class="krole pk">PK</span></li><li class="col col--pk"><code>season</code><span class="ctype">str</span><span class="krole pk">PK</span></li><li class="col"><code>league</code><span class="ctype">str</span></li><li class="col"><code>team</code><span class="ctype">str</span></li><li class="col"><code>players_used</code><span class="ctype">int</span></li><li class="col"><code>avg_age</code><span class="ctype">num</span></li><li class="col"><code>matches_played</code><span class="ctype">int</span></li><li class="col"><code>minutes</code><span class="ctype">int</span></li><li class="col"><code>minutes_per_match</code><span class="ctype">int</span></li><li class="col"><code>minutes_pct</code><span class="ctype">int</span></li><li class="col"><code>minutes_90s</code><span class="ctype">int</span></li><li class="col"><code>starts</code><span class="ctype">int</span></li><li class="col"><code>minutes_per_start</code><span class="ctype">int</span></li><li class="col"><code>complete_matches</code><span class="ctype">int</span></li><li class="col"><code>sub_appearances</code><span class="ctype">int</span></li><li class="col"><code>minutes_per_sub</code><span class="ctype">int</span></li><li class="col"><code>unused_subs</code><span class="ctype">int</span></li><li class="col"><code>points_per_match</code><span class="ctype">num</span></li><li class="col"><code>goals_for</code><span class="ctype">int</span></li><li class="col"><code>goals_against</code><span class="ctype">int</span></li><li class="col"><code>goal_difference</code><span class="ctype">int</span></li><li class="col"><code>goal_difference_per_90</code><span class="ctype">num</span></li></ul>
+    </article>
+
+    <article class="card fam-team-season">
+      <header class="card-h">
+        <div class="card-title">
+          <span class="fam-dot"></span>
+          <h3>misc</h3>
+          <span class="model-id">stg_fbref_team_season_stats_misc</span>
+        </div>
+        <span class="rowcount">96<small>rows</small></span>
+      </header>
+      <div class="card-meta">
+        <span class="tag grain">team · season</span>
+        <span class="tag pk">PK&nbsp;team_id + season</span>
+        
+      </div>
+      
+      <ul class="cols"><li class="col col--pk"><code>team_id</code><span class="ctype">str</span><span class="krole pk">PK</span></li><li class="col col--pk"><code>season</code><span class="ctype">str</span><span class="krole pk">PK</span></li><li class="col"><code>league</code><span class="ctype">str</span></li><li class="col"><code>team</code><span class="ctype">str</span></li><li class="col"><code>players_used</code><span class="ctype">int</span></li><li class="col"><code>minutes_90s</code><span class="ctype">int</span></li><li class="col"><code>yellow_cards</code><span class="ctype">int</span></li><li class="col"><code>red_cards</code><span class="ctype">int</span></li><li class="col"><code>second_yellow_card</code><span class="ctype">int</span></li><li class="col"><code>fouls_committed</code><span class="ctype">int</span></li><li class="col"><code>fouls_drawn</code><span class="ctype">int</span></li><li class="col"><code>offsides</code><span class="ctype">int</span></li><li class="col"><code>crosses_attempted</code><span class="ctype">int</span></li><li class="col"><code>interceptions</code><span class="ctype">int</span></li><li class="col"><code>tackles_won</code><span class="ctype">int</span></li><li class="col"><code>penalties_won</code><span class="ctype">int</span></li><li class="col"><code>penalties_conceded</code><span class="ctype">int</span></li><li class="col"><code>own_goals</code><span class="ctype">int</span></li></ul>
+    </article></div>
+    </section>
+
+    <section class="fam-section" data-fam="team-match">
+      <div class="fam-head">
+        <h2>Team-Match</h2>
+        <span class="fam-count">4 models · 14,032 rows</span>
+      </div>
+      <div class="grid">
+    <article class="card fam-team-match">
+      <header class="card-h">
+        <div class="card-title">
+          <span class="fam-dot"></span>
+          <h3>schedule</h3>
+          <span class="model-id">stg_fbref_team_match_stats_schedule</span>
+        </div>
+        <span class="rowcount">3,508<small>rows</small></span>
+      </header>
+      <div class="card-meta">
+        <span class="tag grain">team · match</span>
+        <span class="tag pk">PK&nbsp;team_match_id</span>
+        <span class="tag fk">FK&nbsp;match_id&nbsp;→ schedule</span>
+      </div>
+      <p class="note">Match log with tactics: formation, possession, captain.</p>
+      <ul class="cols"><li class="col col--pk"><code>team_match_id</code><span class="ctype">str</span><span class="krole pk">PK</span></li><li class="col col--fk"><code>match_id</code><span class="ctype">str</span><span class="krole fk">FK</span></li><li class="col"><code>league</code><span class="ctype">str</span></li><li class="col"><code>season</code><span class="ctype">str</span></li><li class="col"><code>team</code><span class="ctype">str</span></li><li class="col"><code>opponent</code><span class="ctype">str</span></li><li class="col"><code>match_date</code><span class="ctype">date</span></li><li class="col"><code>venue</code><span class="ctype">str</span></li><li class="col"><code>result</code><span class="ctype">str</span></li><li class="col"><code>goals_for</code><span class="ctype">int</span></li><li class="col"><code>goals_against</code><span class="ctype">int</span></li><li class="col"><code>possession_pct</code><span class="ctype">int</span></li><li class="col"><code>formation</code><span class="ctype">str</span></li><li class="col"><code>opponent_formation</code><span class="ctype">str</span></li><li class="col"><code>captain</code><span class="ctype">str</span></li><li class="col"><code>attendance</code><span class="ctype">int</span></li><li class="col"><code>referee</code><span class="ctype">str</span></li></ul>
+    </article>
+
+    <article class="card fam-team-match">
+      <header class="card-h">
+        <div class="card-title">
+          <span class="fam-dot"></span>
+          <h3>shooting</h3>
+          <span class="model-id">stg_fbref_team_match_stats_shooting</span>
+        </div>
+        <span class="rowcount">3,508<small>rows</small></span>
+      </header>
+      <div class="card-meta">
+        <span class="tag grain">team · match</span>
+        <span class="tag pk">PK&nbsp;team_match_id</span>
+        <span class="tag fk">FK&nbsp;match_id&nbsp;→ schedule</span>
+      </div>
+      
+      <ul class="cols"><li class="col col--pk"><code>team_match_id</code><span class="ctype">str</span><span class="krole pk">PK</span></li><li class="col col--fk"><code>match_id</code><span class="ctype">str</span><span class="krole fk">FK</span></li><li class="col"><code>league</code><span class="ctype">str</span></li><li class="col"><code>season</code><span class="ctype">str</span></li><li class="col"><code>team</code><span class="ctype">str</span></li><li class="col"><code>opponent</code><span class="ctype">str</span></li><li class="col"><code>match_date</code><span class="ctype">date</span></li><li class="col"><code>venue</code><span class="ctype">str</span></li><li class="col"><code>result</code><span class="ctype">str</span></li><li class="col"><code>goals</code><span class="ctype">int</span></li><li class="col"><code>shots</code><span class="ctype">int</span></li><li class="col"><code>shots_on_target</code><span class="ctype">int</span></li><li class="col"><code>shots_on_target_pct</code><span class="ctype">num</span></li><li class="col"><code>goals_per_shot</code><span class="ctype">num</span></li><li class="col"><code>goals_per_shot_on_target</code><span class="ctype">num</span></li><li class="col"><code>penalty_goals</code><span class="ctype">int</span></li><li class="col"><code>penalties_attempted</code><span class="ctype">int</span></li></ul>
+    </article>
+
+    <article class="card fam-team-match">
+      <header class="card-h">
+        <div class="card-title">
+          <span class="fam-dot"></span>
+          <h3>keeper</h3>
+          <span class="model-id">stg_fbref_team_match_stats_keeper</span>
+        </div>
+        <span class="rowcount">3,508<small>rows</small></span>
+      </header>
+      <div class="card-meta">
+        <span class="tag grain">team · match</span>
+        <span class="tag pk">PK&nbsp;team_match_id</span>
+        <span class="tag fk">FK&nbsp;match_id&nbsp;→ schedule</span>
+      </div>
+      
+      <ul class="cols"><li class="col col--pk"><code>team_match_id</code><span class="ctype">str</span><span class="krole pk">PK</span></li><li class="col col--fk"><code>match_id</code><span class="ctype">str</span><span class="krole fk">FK</span></li><li class="col"><code>league</code><span class="ctype">str</span></li><li class="col"><code>season</code><span class="ctype">str</span></li><li class="col"><code>team</code><span class="ctype">str</span></li><li class="col"><code>opponent</code><span class="ctype">str</span></li><li class="col"><code>match_date</code><span class="ctype">date</span></li><li class="col"><code>venue</code><span class="ctype">str</span></li><li class="col"><code>result</code><span class="ctype">str</span></li><li class="col"><code>shots_on_target_against</code><span class="ctype">int</span></li><li class="col"><code>goals_against</code><span class="ctype">int</span></li><li class="col"><code>saves</code><span class="ctype">int</span></li><li class="col"><code>clean_sheets</code><span class="ctype">int</span></li><li class="col"><code>penalties_faced</code><span class="ctype">int</span></li><li class="col"><code>penalties_scored_against</code><span class="ctype">int</span></li><li class="col"><code>penalties_saved</code><span class="ctype">int</span></li></ul>
+    </article>
+
+    <article class="card fam-team-match">
+      <header class="card-h">
+        <div class="card-title">
+          <span class="fam-dot"></span>
+          <h3>misc</h3>
+          <span class="model-id">stg_fbref_team_match_stats_misc</span>
+        </div>
+        <span class="rowcount">3,508<small>rows</small></span>
+      </header>
+      <div class="card-meta">
+        <span class="tag grain">team · match</span>
+        <span class="tag pk">PK&nbsp;team_match_id</span>
+        <span class="tag fk">FK&nbsp;match_id&nbsp;→ schedule</span>
+      </div>
+      
+      <ul class="cols"><li class="col col--pk"><code>team_match_id</code><span class="ctype">str</span><span class="krole pk">PK</span></li><li class="col col--fk"><code>match_id</code><span class="ctype">str</span><span class="krole fk">FK</span></li><li class="col"><code>league</code><span class="ctype">str</span></li><li class="col"><code>season</code><span class="ctype">str</span></li><li class="col"><code>team</code><span class="ctype">str</span></li><li class="col"><code>opponent</code><span class="ctype">str</span></li><li class="col"><code>match_date</code><span class="ctype">date</span></li><li class="col"><code>venue</code><span class="ctype">str</span></li><li class="col"><code>result</code><span class="ctype">str</span></li><li class="col"><code>goals_for</code><span class="ctype">int</span></li><li class="col"><code>goals_against</code><span class="ctype">int</span></li><li class="col"><code>yellow_cards</code><span class="ctype">int</span></li><li class="col"><code>red_cards</code><span class="ctype">int</span></li><li class="col"><code>second_yellow_card</code><span class="ctype">int</span></li><li class="col"><code>fouls_committed</code><span class="ctype">int</span></li><li class="col"><code>fouls_drawn</code><span class="ctype">int</span></li><li class="col"><code>offsides</code><span class="ctype">int</span></li><li class="col"><code>crosses_attempted</code><span class="ctype">int</span></li><li class="col"><code>interceptions</code><span class="ctype">int</span></li><li class="col"><code>tackles_won</code><span class="ctype">int</span></li><li class="col"><code>penalties_won</code><span class="ctype">int</span></li><li class="col"><code>penalties_conceded</code><span class="ctype">int</span></li><li class="col"><code>own_goals</code><span class="ctype">int</span></li></ul>
+    </article></div>
+    </section>
+  
+<h2 class="block">Data quality &amp; decisions</h2>
+<div class="callouts">
+  <div class="callout"><h3><span class="tick">&#10003;</span> League-only, gated on schedule</h3>
+    <p>Team-match tables keep a row only if its <code>match_id</code> exists in
+    <code>stg_fbref_schedule</code> &mdash; the reliable league-fixture list.</p>
+    <p>This recovered <b>310 league matches</b> a naive <code>league != 'nan'</code> filter had dropped:
+    the bronze <code>league</code> column is unreliably <code>'nan'</code> even for real league games.</p></div>
+  <div class="callout warn"><h3><span class="flag">&#9873;</span> NaN is a string, not NULL</h3>
+    <p>Bronze stringified pandas <code>NaN</code>, so nulls arrive as the literal text <code>'nan'</code>.
+    Filter with <code>!= 'nan'</code>, never <code>IS NOT NULL</code>.</p></div>
+  <div class="callout warn"><h3><span class="flag">&#9873;</span> Dates from the game string</h3>
+    <p>The bronze <code>date</code> is a tz-aware timestamp; <code>date::date</code> is off by one day.
+    Match dates come from <code>split_part(game,' ',1)</code> instead.</p></div>
+  <div class="callout"><h3><span class="tick">&#10003;</span> Cup data intentionally excluded</h3>
+    <p>FBref only tracks Big-5 teams' cup games (often one-sided, with <code>nan</code> stats), so cup
+    matches are left in bronze. Silver is strictly the Big-5 leagues.</p></div>
+</div>
+  
+<h2 class="block">Naming &mdash; reconciled <span style="color:var(--accent-ink)">&#10003;</span></h2>
+<p style="color:var(--ink-2);font-size:14px;max-width:74ch;margin:0 0 16px;">Building the catalog surfaced
+drift between the player and team models &mdash; the same concept spelled differently across tables. It's
+now aligned to one vocabulary, so unions and joins in gold speak the same language. The canonical form and
+what was folded into it:</p>
+<div class="nametbl-wrap"><table class="nametbl">
+  <thead><tr><th>Concept</th><th>Canonical</th><th>Folded in from</th></tr></thead>
+  <tbody>
+    <tr><td>Save percentage</td><td class="c2"><code>save_pct</code></td><td class="c1"><code>save_percentage</code></td></tr>
+    <tr><td>Clean-sheet %</td><td class="c2"><code>clean_sheet_pct</code></td><td class="c1"><code>clean_sheet_percentage</code></td></tr>
+    <tr><td>Pen. save %</td><td class="c2"><code>penalty_save_pct</code></td><td class="c1"><code>penalty_kick_save_percentage</code></td></tr>
+    <tr><td>Pens. scored against keeper</td><td class="c2"><code>penalties_allowed</code></td><td class="c1"><code>penalties_scored_against</code></td></tr>
+    <tr><td>Pens. missed by shooter</td><td class="c2"><code>penalties_missed</code></td><td class="c1"><code>penalties_missed_by_shooter</code></td></tr>
+    <tr><td>Player name</td><td class="c2"><code>name</code></td><td class="c1"><code>player_name</code> (shooting)</td></tr>
+    <tr><td>Shots per 90</td><td class="c2"><code>shots_per_90</code></td><td class="c1"><code>shots_per_90_min</code></td></tr>
+    <tr><td>Shots on target per 90</td><td class="c2"><code>shots_on_target_per_90</code></td><td class="c1"><code>shots_on_target_per_90_min</code></td></tr>
+    <tr><td>Pen. attempts</td><td class="c2"><code>penalties_attempted</code></td><td class="c1"><code>penalty_attempts</code></td></tr>
+    <tr><td>90-min periods</td><td class="c2"><code>minutes_90s</code></td><td class="c1"><code>no_of_90_min_periods_played</code>, <code>minutes_played_per_90</code></td></tr>
+  </tbody>
+</table></div>
+  <footer>
+    <span>Silver layer &middot; dbt-duckdb over Delta bronze</span>
+    <span>grain: player-season &middot; team-season &middot; team-match</span>
+  </footer>
+</div>

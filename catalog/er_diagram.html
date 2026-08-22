@@ -1,0 +1,262 @@
+<style>
+:root{
+  --ground:#f3f6f2; --surface:#ffffff; --surface-2:#eaf0ea;
+  --ink:#15211b; --ink-2:#3f4f47; --ink-3:#6b7c72; --line:#dbe4dd; --line-2:#c9d5cc;
+  --accent:#0f7a43; --accent-ink:#0a5c32;
+  --fam-dim:#3268a6; --fam-match:#0f7a43; --fam-player:#a8720c; --fam-team-season:#6a52c9; --fam-team-match:#0d8a80;
+  --pk:#0f7a43; --fk:#a8720c;
+  --shadow:0 1px 2px rgba(20,40,30,.06),0 6px 20px rgba(20,40,30,.06);
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0c1310; --surface:#121c17; --surface-2:#182420;
+  --ink:#e9f1eb; --ink-2:#a7b8ad; --ink-3:#7a8c82; --line:#24322b; --line-2:#2f3f37;
+  --accent:#37c07b; --accent-ink:#8fe3b6;
+  --fam-dim:#6fa3dc; --fam-match:#37c07b; --fam-player:#dca63f; --fam-team-season:#a493f0; --fam-team-match:#3fc3b8;
+  --pk:#37c07b; --fk:#dca63f;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.28);
+}}
+:root[data-theme="dark"]{
+  --ground:#0c1310; --surface:#121c17; --surface-2:#182420;
+  --ink:#e9f1eb; --ink-2:#a7b8ad; --ink-3:#7a8c82; --line:#24322b; --line-2:#2f3f37;
+  --accent:#37c07b; --accent-ink:#8fe3b6;
+  --fam-dim:#6fa3dc; --fam-match:#37c07b; --fam-player:#dca63f; --fam-team-season:#a493f0; --fam-team-match:#3fc3b8;
+  --pk:#37c07b; --fk:#dca63f;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.28);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.55;
+  font-size:16px;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px 96px;}
+.masthead{padding:52px 0 24px;border-bottom:1px solid var(--line);}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--accent-ink);margin:0 0 14px;display:flex;align-items:center;gap:10px;}
+.eyebrow::before{content:"";width:22px;height:2px;background:var(--accent);border-radius:2px;}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.05;letter-spacing:-.02em;margin:0 0 12px;font-weight:680;
+  text-wrap:balance;}
+.lede{font-size:18px;color:var(--ink-2);max-width:64ch;margin:0;}
+
+.legend-row{display:flex;flex-wrap:wrap;gap:22px 34px;margin:26px 0 0;}
+.legend-col h4{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 10px;font-weight:600;}
+.legend-col ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px;}
+.legend-col li{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-2);}
+.legend-col code{font-family:var(--mono);font-size:12.5px;color:var(--ink);background:var(--surface-2);
+  padding:2px 7px;border-radius:5px;min-width:56px;text-align:center;}
+.fam-dot{width:11px;height:11px;border-radius:3px;flex:none;}
+.kbadge{font-family:var(--mono);font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;color:#fff;}
+.kbadge.pk{background:var(--pk)} .kbadge.fk{background:var(--fk)}
+
+.diagram-card{margin:26px 0 0;background:#ffffff;border:1px solid var(--line);border-radius:16px;
+  padding:20px;box-shadow:var(--shadow);overflow-x:auto;}
+.diagram-card pre.mermaid{margin:0;min-width:900px;text-align:center;background:transparent;}
+.figcap{margin:16px 2px 0;font-size:13.5px;color:var(--ink-2);max-width:88ch;}
+.figcap b{color:var(--ink);font-weight:620;}
+.figcap code{font-family:var(--mono);font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px;color:var(--ink);}
+
+h2.block{font-size:13px;font-family:var(--mono);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-3);margin:52px 0 16px;font-weight:600;}
+.rel-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow);}
+table.rel{border-collapse:collapse;width:100%;min-width:640px;font-size:13.5px;}
+.rel th,.rel td{text-align:left;padding:11px 16px;border-bottom:1px solid var(--line);vertical-align:top;}
+.rel th{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);
+  font-weight:600;background:var(--surface-2);}
+.rel tr:last-child td{border-bottom:none}
+.rel code{font-family:var(--mono);font-size:12px;color:var(--ink);}
+.rel .card{font-family:var(--mono);color:var(--accent-ink);white-space:nowrap;}
+footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--line);font-family:var(--mono);
+  font-size:12px;color:var(--ink-3);}
+</style>
+<div class="wrap">
+  <header class="masthead">
+    <p class="eyebrow">Football Analytics &middot; Silver Layer</p>
+    <h1>Entity Relationships</h1>
+    <p class="lede">How the 16 silver models relate &mdash; primary keys, foreign keys, and the
+    cardinality between them. All entities are prefixed <code style="font-family:var(--mono)">stg_fbref_</code>.</p>
+    <div class="legend-row">
+      <div class="legend-col">
+        <h4>Families</h4>
+        <ul>
+          <li><span class="fam-dot" style="background:var(--fam-dim)"></span>Dimension</li>
+          <li><span class="fam-dot" style="background:var(--fam-match)"></span>Schedule (match anchor)</li>
+          <li><span class="fam-dot" style="background:var(--fam-team-match)"></span>Team-Match</li>
+          <li><span class="fam-dot" style="background:var(--fam-player)"></span>Player-Season</li>
+          <li><span class="fam-dot" style="background:var(--fam-team-season)"></span>Team-Season</li>
+        </ul>
+      </div>
+      <div class="legend-col">
+        <h4>Keys</h4>
+        <ul>
+          <li><span class="kbadge pk">PK</span> primary key</li>
+          <li><span class="kbadge fk">FK</span> foreign key</li>
+        </ul>
+      </div>
+      <div class="legend-col">
+        <h4>Cardinality (crow's foot)</h4>
+        <ul>
+          <li><code>||&mdash;||</code> exactly one &harr; one</li>
+          <li><code>||&mdash;o{</code> one &harr; many</li>
+          <li><code>||&mdash;o|</code> one &harr; zero-or-one</li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <h2 class="block">ER diagram</h2>
+  <div class="diagram-card">
+<pre class="mermaid">
+erDiagram
+  SEASONS ||--o{ SCHEDULE : "league, season"
+  SEASONS ||--o{ PLAYER_STANDARD : "season"
+  SEASONS ||--o{ TEAM_SEASON_STANDARD : "season"
+
+  SCHEDULE ||--o{ TEAM_MATCH_SCHEDULE : "match_id"
+  SCHEDULE ||--o{ TEAM_MATCH_SHOOTING : "match_id"
+  SCHEDULE ||--o{ TEAM_MATCH_KEEPER : "match_id"
+  SCHEDULE ||--o{ TEAM_MATCH_MISC : "match_id"
+
+  TEAM_MATCH_SCHEDULE ||--|| TEAM_MATCH_SHOOTING : "team_match_id"
+  TEAM_MATCH_SCHEDULE ||--|| TEAM_MATCH_KEEPER : "team_match_id"
+  TEAM_MATCH_SCHEDULE ||--|| TEAM_MATCH_MISC : "team_match_id"
+
+  PLAYER_STANDARD ||--|| PLAYER_SHOOTING : "player_id"
+  PLAYER_STANDARD ||--|| PLAYER_PLAYING_TIME : "player_id"
+  PLAYER_STANDARD ||--|| PLAYER_MISC : "player_id"
+  PLAYER_STANDARD ||--o| PLAYER_KEEPER : "player_id (GK only)"
+
+  TEAM_SEASON_STANDARD ||--|| TEAM_SEASON_SHOOTING : "team_id, season"
+  TEAM_SEASON_STANDARD ||--|| TEAM_SEASON_PLAYING_TIME : "team_id, season"
+  TEAM_SEASON_STANDARD ||--|| TEAM_SEASON_MISC : "team_id, season"
+  TEAM_SEASON_STANDARD ||--o| TEAM_SEASON_KEEPER : "team_id, season"
+
+  SEASONS {
+    string league PK
+    string season PK
+  }
+  SCHEDULE {
+    string match_id PK
+    date match_date
+    string home_team
+    string away_team
+    int home_score
+    int away_score
+  }
+  TEAM_MATCH_SCHEDULE {
+    string team_match_id PK
+    string match_id FK
+    string team
+    string opponent
+    string formation
+    int possession_pct
+  }
+  TEAM_MATCH_SHOOTING {
+    string team_match_id PK
+    string match_id FK
+    int goals
+    int shots
+    int shots_on_target
+  }
+  TEAM_MATCH_KEEPER {
+    string team_match_id PK
+    string match_id FK
+    int saves
+    int goals_against
+    int clean_sheets
+  }
+  TEAM_MATCH_MISC {
+    string team_match_id PK
+    string match_id FK
+    int fouls_committed
+    int tackles_won
+    int offsides
+  }
+  PLAYER_STANDARD {
+    string player_id PK
+    string league PK
+    string season PK
+    string team PK
+    string name
+    int goals
+    int assists
+  }
+  PLAYER_SHOOTING {
+    string player_id PK
+    int shots
+    int shots_on_target
+    num goals_per_shot
+  }
+  PLAYER_KEEPER {
+    string player_id PK
+    int saves
+    int clean_sheets
+    num save_pct
+  }
+  PLAYER_PLAYING_TIME {
+    string player_id PK
+    int minutes_played
+    int matches_started
+    num points_per_match
+  }
+  PLAYER_MISC {
+    string player_id PK
+    int tackles_won
+    int interceptions
+    int offsides
+  }
+  TEAM_SEASON_STANDARD {
+    string team_id PK
+    string season PK
+    string league
+    string team
+    int goals
+    num possession_pct
+  }
+  TEAM_SEASON_SHOOTING {
+    string team_id PK
+    string season PK
+    int shots
+    num goals_per_shot
+  }
+  TEAM_SEASON_KEEPER {
+    string team_id PK
+    string season PK
+    int saves
+    int clean_sheets
+  }
+  TEAM_SEASON_PLAYING_TIME {
+    string team_id PK
+    string season PK
+    num avg_age
+    num points_per_match
+  }
+  TEAM_SEASON_MISC {
+    string team_id PK
+    string season PK
+    int fouls_committed
+    int tackles_won
+  }
+</pre>
+  </div>
+  <p class="figcap"><b>Three join keys, one anchor.</b> Every match-grain table carries <code>match_id</code>
+  as an FK back to <code>SCHEDULE</code> (one match &rarr; two team rows, hence one-to-many). Within a family,
+  the stat tables join one-to-one on their shared key &mdash; <code>player_id</code>, <code>(team_id, season)</code>,
+  or <code>team_match_id</code>. The keeper tables are <b>zero-or-one</b>: only goalkeepers appear
+  (212 player-keeper rows vs 2,854 standard).</p>
+
+  <h2 class="block">Relationships at a glance</h2>
+  <div class="rel-wrap"><table class="rel">
+    <thead><tr><th>From</th><th>To</th><th>Key</th><th>Cardinality</th></tr></thead>
+    <tbody>
+      <tr><td><code>seasons</code></td><td><code>schedule</code></td><td><code>league, season</code></td><td class="card">one &rarr; many</td></tr>
+      <tr><td><code>schedule</code></td><td><code>team_match_*</code> (4)</td><td><code>match_id</code></td><td class="card">one &rarr; many (2 teams)</td></tr>
+      <tr><td><code>team_match_schedule</code></td><td><code>team_match_*</code> siblings</td><td><code>team_match_id</code></td><td class="card">one &rarr; one</td></tr>
+      <tr><td><code>player_standard</code></td><td><code>player_*</code> siblings</td><td><code>player_id</code></td><td class="card">one &rarr; one</td></tr>
+      <tr><td><code>player_standard</code></td><td><code>player_keeper</code></td><td><code>player_id</code></td><td class="card">one &rarr; zero-or-one</td></tr>
+      <tr><td><code>team_season_standard</code></td><td><code>team_season_*</code> siblings</td><td><code>team_id, season</code></td><td class="card">one &rarr; one</td></tr>
+      <tr><td><code>team_season_standard</code></td><td><code>team_season_keeper</code></td><td><code>team_id, season</code></td><td class="card">one &rarr; zero-or-one</td></tr>
+    </tbody>
+  </table></div>
+
+  <footer>Silver layer &middot; 16 models &middot; keys: match_id &middot; player_id &middot; (team_id, season) &middot; team_match_id</footer>
+</div>
