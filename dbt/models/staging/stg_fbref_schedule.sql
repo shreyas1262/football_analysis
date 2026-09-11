@@ -16,8 +16,12 @@ with source as (
         home_team,
         away_team,
         score,
-        split_part(score, '–', 1)::integer as home_score,
-        split_part(score, '–', 2)::integer as away_score,
+        -- Strip penalty-shootout notation before casting. FBref writes those as
+        -- "(5) 0–3 (6)", where the parenthesised numbers are the shootout score
+        -- (seen on relegation/promotion playoffs). Keep the 90/120-minute score,
+        -- which is what a league table counts.
+        trim(regexp_replace(split_part(score, '–', 1), '\(\d+\)', ''))::integer as home_score,
+        trim(regexp_replace(split_part(score, '–', 2), '\(\d+\)', ''))::integer as away_score,
         score is not null as is_complete,
         attendance::integer as attendance,
         venue,
