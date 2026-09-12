@@ -143,12 +143,19 @@ Runs the full pipeline for new season(s) and validates the result before declari
      from 2023-24 onward. So expect 380 for older Ligue 1 seasons and 308 from
      2023-24 (verified: 2022-23 = 380, 2023-24 = 308). Bundesliga has been 18
      teams throughout.
-   - **One-off play-offs add matches and are genuine, not errors.** Verified
-     case: **Serie A 2022-23 has 381** — Spezia and Hellas Verona finished level
-     on points, so a relegation tie-breaker (*spareggio*) was played on
-     2023-06-10. It shows up with `round = "Relegation tie-breaker"` and a null
-     `week`. Before treating an off-by-one as a scrape problem, check the
-     `round` column for play-off/tie-breaker labels:
+   - **Play-offs add matches and are genuine, not errors.** They vary by season,
+     so treat the base round-robin number as a floor, not an exact expectation.
+     Verified cases:
+     - **Bundesliga: consistently +2** (relegation/promotion play-off) → 308
+     - **Ligue 1 2021-22 = 382** — 380 round-robin *plus* a 2-leg play-off that
+       it did *not* have in 2022-23 (380). Same team count, different total.
+     - **Serie A 2022-23 = 381** — Spezia and Hellas Verona finished level on
+       points, forcing a one-off relegation tie-breaker (*spareggio*).
+
+     Play-off rows carry a null `week` and a descriptive `round` (e.g.
+     `"French 1/2 Relegation/Promotion play-offs"`, `"Relegation tie-breaker"`).
+     Before treating an off-by-one as a scrape problem, check the `round`
+     column:
      ```sql
      select round, week, count(*) from <schedule>
      where season = '<code>' and league = '<league>'
